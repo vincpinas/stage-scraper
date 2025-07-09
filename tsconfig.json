@@ -1,0 +1,44 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"allowImportingTsExtensions": true,
+		"resolveJsonModule": true,
+		"noEmit": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"outDir": "dist",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["src/*"],
+			"@auth": ["src/auth/index.ts"],
+			"@auth/*": ["src/auth/*"],
+			"@db": ["src/db/index.ts"],
+			"@db/*": ["src/db/*"],
+			"@middleware": ["src/middleware/*"],
+			"@middleware/*": ["src/middleware/*/index.ts"],
+			"@routes": ["src/routes/index.ts"],
+			"@routes/*": ["src/routes/*"],
+			"@services": ["src/services/index.ts"],
+			"@services/*": ["src/services/*"],
+			"@tests": ["src/tests/index.ts"],
+			"@tests/*": ["src/tests/*"],
+			"@webscraper": ["src/webscraper/index.ts"],
+			"@webscraper/*": ["src/webscraper/*"],
+			"@util": ["src/util.ts"],
+			"@types": ["src/types/index.d.ts"]
+		}
+	},
+	"include": [
+		"./src/**/*.ts",
+		"./index.ts",
+		"./scripts/**/*.ts",
+		"scripts/test/index.ts",
+		"scripts/build/index.ts",
+		"scripts/build/helpers.ts"
+	],
+	"exclude": ["./node_modules", "./dist"]
+}

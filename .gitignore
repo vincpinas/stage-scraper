@@ -1,0 +1,37 @@
+TODO.md
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Test output
+coverage/
+
+# Misc
+.env
+package-lock.json
+uploads/
+.env.*
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+*.local
+.docker/
