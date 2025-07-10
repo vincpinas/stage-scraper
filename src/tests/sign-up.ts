@@ -6,9 +6,9 @@ export default async function test(app: StageScraper) {
 		.post("/auth/sign-up")
 		.set("Content-Type", "application/json")
 		.send({
-			username: "vincp",
+			username: "testuser" + Date.now(),
 			password: "Password1",
-			email: "gmail@gmail.com",
+			email: "test" + Date.now() + "@gmail.com",
 		})
 		.then((response: any) => {
 			console.log(response.body);

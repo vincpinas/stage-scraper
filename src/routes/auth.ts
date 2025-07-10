@@ -1,9 +1,6 @@
 import express from "express";
 import useValidation from "@middleware/validation";
 
-// Configuration
-// ================================
-
 const router = express.Router();
 
 // Development routes
@@ -14,7 +11,7 @@ if (process.env.NODE_ENV === "development") {
 		const response = req.httpResponse;
 		const db = req.appRef.getDB();
 
-		const results = await db.users.all();
+		const results = await db.users.findMany();
 
 		response.addResults(results);
 
@@ -30,37 +27,46 @@ router.post(
 	...useValidation({
 		field: {
 			requiredFields: ["username", "password", "email"],
-		}
+		},
 	}),
 	async (req, res, next) => {
 		const response = req.httpResponse;
 		const db = req.appRef.getDB();
 		const { username, password, email } = req.body;
 
-		const newUser = await db.users.create(username, password, email);
+		try {
+			const newUser = await db.users.create({
+				data: {
+					username,
+					password,
+					email,
+				},
+			});
 
-		// Check if user creation was successful
-		if (newUser.errors.length > 0) {
-			response.combine(newUser);
+			// Automatically log in the user after successful signup
+			const login = await db.users.findUnique({
+				where: {
+					username,
+				},
+			});
+
+			if (login && login.password === password) {
+				req.session.loggedIn = true;
+				req.session.username = username;
+				response.setMessage("Account created and logged in successfully");
+			} else {
+				response.setMessage("Account created successfully. Please log in.");
+			}
+
+			response.addResults(newUser);
+			response.setUser(login);
+
 			next();
-			return;
+		} catch (err: any) {
+			response.setMessage("Error creating user");
+			response.addError(err.message);
+			next();
 		}
-
-		// Automatically log in the user after successful signup
-		const login = await db.users.login(username, password);
-
-		if (login) {
-			req.session.loggedIn = true;
-			req.session.username = username;
-			response.setMessage("Account created and logged in successfully");
-		} else {
-			response.setMessage("Account created successfully. Please log in.");
-		}
-
-		response.combine(newUser);
-		response.setUser(login);
-
-		next();
 	}
 );
 
@@ -69,32 +75,42 @@ router.post(
 	...useValidation({
 		field: {
 			requiredFields: ["username", "password"],
-		}
+		},
 	}),
 	async (req, res, next) => {
 		const response = req.httpResponse;
 		const db = req.appRef.getDB();
 		const { username, password } = req.body;
 
-		const login = await db.users.login(username, password);
+		try {
+			const login = await db.users.findUnique({
+				where: {
+					username,
+				},
+			});
 
-		if (!login) {
-			response.setMessage("Invalid username or password");
+			if (!login || login.password !== password) {
+				response.setMessage("Invalid username or password");
+				response.clean();
+				res.status(401).send(response);
+				res.end();
+				return;
+			}
 
+			req.session.loggedIn = true;
+			req.session.username = username;
+
+			response.setMessage("Login successful");
+			response.setUser(login);
+
+			next();
+		} catch (err: any) {
+			response.setMessage("Error logging in");
+			response.addError(err.message);
 			response.clean();
-			
-			res.status(401).send(response);
+			res.status(500).send(response);
 			res.end();
-			return;
 		}
-
-		req.session.loggedIn = true;
-		req.session.username = username;
-
-		response.setMessage("Login successful");
-		response.setUser(login)
-
-		next();
 	}
 );
 

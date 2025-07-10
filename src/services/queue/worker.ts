@@ -2,15 +2,27 @@ import type { TaskOptions } from "@/types/queue.d.ts";
 
 import Queue, { Task } from "./index.ts";
 
-import compressImageExecutor from "./executors/compress-image.ts";
-import webscrapeExecutor from "./executors/webscrape.ts";
+import compressImageExecutor from "./jobs/compress-image.ts";
+import webscrapeExecutor from "./jobs/webscrape.ts";
+import { readdirSync } from "fs";
+import path from "path";
 
 // Create a queue with 1 concurrent task (can be increased if desired)
 const queue = new Queue(1);
 
-// Register all relevant executors here
-queue.registerExecutor("compress-image", compressImageExecutor);
-queue.registerExecutor("webscrape", webscrapeExecutor);
+const executorDir = path.join(process.cwd(), "src", "services", "queue", "jobs")
+const executorFiles = readdirSync(executorDir).filter((file) =>
+	file.endsWith(".ts")
+);
+
+// Register all executors from src/services/queue/jobs.
+executorFiles.forEach(async file => {
+	// The filename minus the extension automatically gets used as the task type.
+	const name = file.split(".")[0];
+	const executor = await import(path.join(executorDir, file));
+	
+	queue.registerExecutor(name, executor.default);
+});
 
 // Listen for tasks from the parent process
 process.on("message", async (taskData) => {

@@ -35,3 +35,4 @@ uploads/
 # Docker
 *.local
 .docker/
+/generated/prisma

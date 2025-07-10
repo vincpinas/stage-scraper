@@ -99,8 +99,13 @@ export default class HttpResponse {
 		return this;
 	}
 
-	addResults(results: DBRow) {
-		this.results = [...this.results, ...results];
+	addResults(results: any |  any[]) {
+
+		if(Array.isArray(results)) {
+			this.results = [...this.results, ...results];
+		} else {
+			this.results.push(results);
+		}
 
 		return this;
 	}

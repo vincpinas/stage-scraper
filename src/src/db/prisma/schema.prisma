@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/db/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user_permissions {
+  id          Int       @id @default(autoincrement())
+  user_id     Int?
+  permissions Json?
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+  users       users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_permissions_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model users {
+  id               Int                @id @default(autoincrement())
+  username         String             @unique(map: "username") @db.VarChar(255)
+  email            String             @unique(map: "email") @db.VarChar(255)
+  password         String             @db.VarChar(255)
+  avatar           String?            @db.VarChar(1000)
+  created_at       DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?          @default(now()) @db.Timestamp(0)
+  scrapes          scrapes[]
+  user_permissions user_permissions[]
+}
+
+model scrapes {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  url        String    @db.VarChar(500)
+  status     String?   @default("pending") @db.VarChar(50)
+  result     Json?
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scrapes_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}

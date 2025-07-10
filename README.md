@@ -76,7 +76,7 @@ server/
 ├── nodemon.json
 ├── package.json
 ├── README.md
-├── testconfig.json
+├── testconfig.json            # Config for custom testing script.
 ├── tsconfig.build.json
 ├── tsconfig.json
 ├── uploads/

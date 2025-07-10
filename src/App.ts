@@ -4,8 +4,8 @@ import path from "path";
 import fs from "fs";
 import { fork, ChildProcess } from "child_process";
 
-// Core
-import DB from "@db";
+// Database
+import { PrismaClient } from "@db/prisma/index.js"
 
 // External Middleware
 import cors from "cors";
@@ -22,6 +22,8 @@ import UploadRoutes from "@routes/upload.ts";
 
 import Queue from "@/services/queue/index.ts";
 
+process.loadEnvFile(".env");
+
 class StageScraper {
 	private static instance: StageScraper;
 
@@ -31,7 +33,7 @@ class StageScraper {
 	private app: express.Application;
 	private router: express.Router;
 	private port: number;
-	private db: DB;
+	private db: PrismaClient;
 	private queue: Queue;
 	private worker: ChildProcess;
 	private queueAutoDelay: number;
@@ -47,7 +49,7 @@ class StageScraper {
 		this.router = express.Router();
 
 		// Add services
-		this.db = new DB();
+		this.db = new PrismaClient();
 		this.queue = new Queue(10);
 
 		// Spawn the worker process
@@ -78,7 +80,7 @@ class StageScraper {
 		return this.port;
 	}
 
-	public getDB(): DB {
+	public getDB(): PrismaClient {
 		return this.db;
 	}
 
@@ -121,12 +123,12 @@ class StageScraper {
 		return this;
 	}
 
-	public stop() {
+	public async stop() {
 		if (this.queueInterval) {
 			clearInterval(this.queueInterval);
 		}
 
-		this.db.disconnect();
+		await this.db.$disconnect()
 
 		if (this.worker && this.worker.connected) {
 			this.worker.kill();

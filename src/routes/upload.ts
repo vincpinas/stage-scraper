@@ -47,7 +47,11 @@ router.post(
 		const queue = req.appRef.getQueue();
 
 		// Get current user data.
-		const user = await db.users.getByName(username);
+		const user = await db.users.findUnique({
+			where: {
+				username: username,
+			},
+		});
 
 		if (!user) return;
 
@@ -56,10 +60,10 @@ router.post(
 		const directory = `./uploads/avatars/${username}`;
 		const filepath = `${directory}/${filename}`;
 		const publicPath = `/avatars/${username}/${filename}`;
-		
+
 		// Ensure the directory exists
 		if (!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
-		
+
 		// Clear the entire avatar directory before saving the new avatar
 		try {
 			const files = fs.readdirSync(directory);
@@ -72,7 +76,7 @@ router.post(
 		} catch (err) {
 			console.error("Error clearing avatar directory:", err);
 		}
-		
+
 		// You can access the file buffer with: req.file
 		// We just take the buffer, write it to a file and then save that filePath to the user.
 		fs.writeFileSync(filepath, req.file.buffer);
@@ -85,14 +89,16 @@ router.post(
 			publicPath,
 		});
 
-		const changeUserAvatar = await db.users.update(username, [
-			{
-				field: "avatar",
-				value: avatar.json(),
+		const updatedUser = await db.users.update({
+			where: {
+				username: username,
 			},
-		]);
+			data: {
+				avatar: avatar.json(),
+			},
+		});
 
-		response.combine(changeUserAvatar);
+		response.setUser(updatedUser);
 		response.setMessage("User avatar successfully updated");
 
 		queue.add(
@@ -108,7 +114,7 @@ router.post(
 						{ width: 250, height: 250 },
 					],
 				},
-				userId: user.id
+				userId: user.id,
 			})
 		);
 
