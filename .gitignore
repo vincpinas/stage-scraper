@@ -25,6 +25,7 @@ coverage/
 # Misc
 .env
 package-lock.json
+yarn.lock
 uploads/
 .env.*
 .idea/

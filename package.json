@@ -12,6 +12,7 @@
 	"scripts": {
 		"start": "npx ts-node index.ts",
 		"build": "clear && tsx scripts/build",
+		"lint": "npx eslint . --ext .ts,.js --ignore-pattern 'src/db/prisma/**'",
 		"test": "clear && tsx scripts/test",
 		"dev": "colima start && docker-compose up -d && nodemon",
 		"stop": "docker-compose down && colima stop",
@@ -19,9 +20,12 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.30.1",
+		"@types/bcrypt": "^5.0.2",
 		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.3",
 		"@types/express-session": "^1.18.2",
+		"@types/jsdom": "^21.1.7",
+		"@types/multer": "^2.0.0",
 		"@types/mysql": "^2.15.27",
 		"@types/node": "^24.0.4",
 		"@types/nodemailer": "^6.4.17",
@@ -35,23 +39,23 @@
 		"nodemon": "^3.1.10",
 		"supertest": "^7.1.1",
 		"ts-node": "^10.9.2",
+		"tsx": "^4.20.3",
 		"typescript": "^5.8.3"
 	},
 	"dependencies": {
 		"@prisma/client": "^6.11.1",
-		"@types/multer": "^2.0.0",
+		"bcrypt": "^6.0.0",
 		"cors": "^2.8.5",
 		"express": "^5.1.0",
 		"express-session": "^1.18.1",
+		"jsdom": "^26.1.0",
 		"multer": "^2.0.1",
-		"mysql2": "^3.14.1",
 		"nodemailer": "^7.0.3",
 		"path": "^0.12.7",
 		"prisma": "^6.11.1",
 		"puppeteer": "^24.10.2",
 		"sharp": "^0.34.2",
-		"tsconfig-paths": "^4.2.0",
-		"tsx": "^4.20.3"
+		"tsconfig-paths": "^4.2.0"
 	},
 	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
