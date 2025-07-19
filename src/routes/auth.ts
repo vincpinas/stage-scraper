@@ -1,23 +1,8 @@
 import express from "express";
 import useValidation from "@middleware/validation";
+import { hashPassword, matchHash } from "@lib/util.ts";
 
 const router = express.Router();
-
-// Development routes
-// ================================
-
-if (process.env.NODE_ENV === "development") {
-	router.get("/", async (req, res, next) => {
-		const response = req.httpResponse;
-		const db = req.appRef.getDB();
-
-		const results = await db.users.findMany();
-
-		response.addResults(results);
-
-		next();
-	});
-}
 
 // Authentication routes
 // ================================
@@ -35,36 +20,34 @@ router.post(
 		const { username, password, email } = req.body;
 
 		try {
+			const hashedPassword = hashPassword(password);
+
+			if(!hashedPassword) {
+				throw new Error("Failed to hash password")
+			}
+
 			const newUser = await db.users.create({
 				data: {
 					username,
-					password,
+					password: hashedPassword,
 					email,
 				},
 			});
 
-			// Automatically log in the user after successful signup
-			const login = await db.users.findUnique({
-				where: {
-					username,
-				},
-			});
+			req.session.loggedIn = true;
+			req.session.username = username;
 
-			if (login && login.password === password) {
-				req.session.loggedIn = true;
-				req.session.username = username;
-				response.setMessage("Account created and logged in successfully");
-			} else {
-				response.setMessage("Account created successfully. Please log in.");
-			}
-
-			response.addResults(newUser);
-			response.setUser(login);
+			response.setMessage("Account created and logged in successfully");
+			response.setUser(newUser);
 
 			next();
-		} catch (err: any) {
+		} catch (err: unknown) {
+			const error = err as Error;
 			response.setMessage("Error creating user");
-			response.addError(err.message);
+			response.addError({
+				message: error.message,
+			});
+
 			next();
 		}
 	}
@@ -89,11 +72,9 @@ router.post(
 				},
 			});
 
-			if (!login || login.password !== password) {
+			if (!login || !matchHash(password, login.password)) {
 				response.setMessage("Invalid username or password");
-				response.clean();
-				res.status(401).send(response);
-				res.end();
+				res.status(401).send(response).end();
 				return;
 			}
 
@@ -104,12 +85,13 @@ router.post(
 			response.setUser(login);
 
 			next();
-		} catch (err: any) {
+		} catch (err: unknown) {
+			const error = err as Error;
 			response.setMessage("Error logging in");
-			response.addError(err.message);
-			response.clean();
-			res.status(500).send(response);
-			res.end();
+			response.addError({
+				message: error.message,
+			});
+			res.status(500).send(response).end();
 		}
 	}
 );
