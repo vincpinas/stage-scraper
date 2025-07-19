@@ -124,6 +124,7 @@ exports.Prisma.User_permissionsScalarFieldEnum = {
   id: 'id',
   user_id: 'user_id',
   permissions: 'permissions',
+  created_at: 'created_at',
   updated_at: 'updated_at'
 };
 
@@ -132,19 +133,59 @@ exports.Prisma.UsersScalarFieldEnum = {
   username: 'username',
   email: 'email',
   password: 'password',
-  avatar: 'avatar',
+  avatarId: 'avatarId',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
 
 exports.Prisma.ScrapesScalarFieldEnum = {
   id: 'id',
+  task_uid: 'task_uid',
   user_id: 'user_id',
   url: 'url',
-  status: 'status',
   result: 'result',
   created_at: 'created_at',
   updated_at: 'updated_at'
+};
+
+exports.Prisma.EmailsScalarFieldEnum = {
+  id: 'id',
+  task_uid: 'task_uid',
+  user_id: 'user_id',
+  to: 'to',
+  from: 'from',
+  subject: 'subject',
+  body: 'body',
+  sent_at: 'sent_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.TasksScalarFieldEnum = {
+  id: 'id',
+  uid: 'uid',
+  type: 'type',
+  status: 'status',
+  data: 'data',
+  error: 'error',
+  started_at: 'started_at',
+  finished_at: 'finished_at',
+  usersId: 'usersId',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.UploadsScalarFieldEnum = {
+  id: 'id',
+  uid: 'uid',
+  user_id: 'user_id',
+  type: 'type',
+  filename: 'filename',
+  filepath: 'filepath',
+  publicpath: 'publicpath',
+  mimetype: 'mimetype',
+  size: 'size',
+  created_at: 'created_at'
 };
 
 exports.Prisma.SortOrder = {
@@ -176,20 +217,46 @@ exports.Prisma.NullsOrder = {
 exports.Prisma.usersOrderByRelevanceFieldEnum = {
   username: 'username',
   email: 'email',
-  password: 'password',
-  avatar: 'avatar'
+  password: 'password'
 };
 
 exports.Prisma.scrapesOrderByRelevanceFieldEnum = {
-  url: 'url',
-  status: 'status'
+  task_uid: 'task_uid',
+  url: 'url'
+};
+
+exports.Prisma.emailsOrderByRelevanceFieldEnum = {
+  task_uid: 'task_uid',
+  to: 'to',
+  from: 'from',
+  subject: 'subject',
+  body: 'body'
+};
+
+exports.Prisma.tasksOrderByRelevanceFieldEnum = {
+  uid: 'uid',
+  type: 'type',
+  status: 'status',
+  error: 'error'
+};
+
+exports.Prisma.uploadsOrderByRelevanceFieldEnum = {
+  uid: 'uid',
+  type: 'type',
+  filename: 'filename',
+  filepath: 'filepath',
+  publicpath: 'publicpath',
+  mimetype: 'mimetype'
 };
 
 
 exports.Prisma.ModelName = {
   user_permissions: 'user_permissions',
   users: 'users',
-  scrapes: 'scrapes'
+  scrapes: 'scrapes',
+  emails: 'emails',
+  tasks: 'tasks',
+  uploads: 'uploads'
 };
 
 /**
