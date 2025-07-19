@@ -1,5 +1,6 @@
 import { readdirSync } from "fs";
-import { join } from "path";
+
+import { changeExtensions } from "@/lib/util.ts";
 
 import type { ConfigBuildOptions, TestConfig } from "@/types/tests.d.ts";
 
@@ -25,33 +26,6 @@ export const TestSelector = (tests: string[]) => {
 	};
 };
 
-export const addExtensions = (filenames: string[], extensions: string[]) => {
-	let result: string[] = [];
-
-	extensions.forEach((extension) => {
-		// Normalize extension by removing leading dot if present
-		const normalizedExtension = extension.replace(/^\./, "");
-
-		const withExtension = filenames.flatMap((testPath: string) => {
-			const testSplit = testPath.split(".");
-			const hasExtension = testSplit.includes(normalizedExtension);
-
-			if (hasExtension) {
-				// If filename already has this extension, return both with and without extension
-				return [testSplit[0], testPath];
-			}
-
-			// If filename doesn't have this extension, return both original and with extension
-			return [testPath, testPath + "." + normalizedExtension];
-		});
-
-		result = [...result, ...withExtension];
-	});
-
-	// Remove any duplicates
-	return [...new Set(result)];
-};
-
 export const getTestFilePaths = (
 	testFolderPath: string,
 	extensions: string[]
@@ -68,8 +42,8 @@ export const buildTestConfig = (
 	const extensions = buildOptions.extensions || ["ts"];
 	const select = buildOptions.select;
 	let testFilePaths = getTestFilePaths(testFolderPath, extensions);
-	const selector = TestSelector(testFilePaths) as any;
-	const selectFunc = selector[select as any];
+	const selector = TestSelector(testFilePaths) as Record<string, unknown>;
+	const selectFunc = selector[select as string] as (() => string[]) | undefined;
 
 	if (Array.isArray(select) && select.length > 0) {
 		testFilePaths = TestSelector(testFilePaths).select(select);
@@ -79,11 +53,11 @@ export const buildTestConfig = (
 		testFilePaths = Array.isArray(result) ? result : result ? [result] : [];
 	}
 
-	const prioritized = addExtensions(
+	const prioritized = changeExtensions(
 		buildOptions.prioritized || [],
 		extensions
 	);
-	const excluded = addExtensions(
+	const excluded = changeExtensions(
 		buildOptions.excluded || [],
 		extensions
 	);

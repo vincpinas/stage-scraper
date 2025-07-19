@@ -1,7 +1,7 @@
 {
-	"select": ["sign-up", "auth-upload-flow"],
+	"select": ["auth-upload-flow", "webscrape"],
 	"excluded": [],
-	"prioritized": ["sign-up"],
+	"prioritized": [],
 	"extensions": ["ts", "js"],
-	"testFolderPath": "/src/tests"
+	"testFolderPath": "/tests"
 }

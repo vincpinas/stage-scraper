@@ -1,7 +1,7 @@
 import type { TestConfig } from "@/types/tests.d.ts";
 
 import StageScraper from "@/App.ts";
-import { inArray } from "@/util.ts";
+import { inArray } from "@lib/util.ts";
 import { buildTestConfig } from "./helpers.ts";
 
 import config from "../../testconfig.json" with { type: "json" };
@@ -53,7 +53,7 @@ const runTests = async (testConfig: TestConfig) => {
 		console.log(`🚀 Running ${status} test: ${path}`);
 		console.log(`${"═".repeat(60)}\n`);
 
-		const test = await import(`@tests/${path}`);
+		const test = await import(`../../tests/${path}`);
 
 		if (!test.default) {
 			throw new Error(`❌ Test file ${path} does not export a default function`);
