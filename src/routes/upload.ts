@@ -1,14 +1,15 @@
 import express from "express";
 import multer from "multer";
 import fs from "fs";
-import path from "path";
 
 import { randomUUID } from "crypto";
-import Image from "@/models/image.ts";
+import File from "@/models/file.ts";
 
 import useValidation from "@/middleware/validation/index.ts";
 import useQueue from "@/middleware/queue.ts";
 import QueueTask from "@/services/queue/task.ts";
+import { clearDir, ensureDir } from "@/lib/util.ts";
+import { waitForDbRecord } from "@/db/helpers.ts";
 
 // Configuration
 // ================================
@@ -28,9 +29,7 @@ const router = express.Router();
 router.post(
 	"/avatar",
 	upload.single("avatar"),
-	useQueue({
-		runNow: true,
-	}),
+	useQueue(),
 	...useValidation({
 		requiresLogin: true,
 		attachment: {
@@ -55,68 +54,94 @@ router.post(
 
 		if (!user) return;
 
-		const uuid = randomUUID();
-		const filename = `${uuid}.jpg`;
-		const directory = `./uploads/avatars/${username}`;
+		const uid = randomUUID();
+		const filename = `${uid}.jpg`;
+		const directory = `uploads/avatars/${username}`;
 		const filepath = `${directory}/${filename}`;
-		const publicPath = `/avatars/${username}/${filename}`;
+		const publicpath = `/avatars/${username}/${filename}`;
 
-		// Ensure the directory exists
-		if (!fs.existsSync(directory)) fs.mkdirSync(directory, { recursive: true });
+		await ensureDir(directory);
 
-		// Clear the entire avatar directory before saving the new avatar
-		try {
-			const files = fs.readdirSync(directory);
-			for (const file of files) {
-				const filePath = path.join(directory, file);
-				if (fs.lstatSync(filePath).isFile()) {
-					fs.unlinkSync(filePath);
+		const oldImages = await fs.promises.readdir(directory);
+
+		if(oldImages.length > 0) {
+			// Remove old uploads from db before saving the new avatar.
+			for (const image of oldImages) {
+				const upload = await db.uploads.findFirst({ where: { filename: image } });
+				if (upload) {
+					await db.uploads.delete({ where: { id: upload.id } });
 				}
 			}
-		} catch (err) {
-			console.error("Error clearing avatar directory:", err);
+
+			// Clear the entire avatar directory before saving the new avatar.
+			await clearDir(directory);
 		}
 
 		// You can access the file buffer with: req.file
 		// We just take the buffer, write it to a file and then save that filePath to the user.
-		fs.writeFileSync(filepath, req.file.buffer);
+		await fs.promises.writeFile(filepath, req.file.buffer);
 
-		const avatar = new Image({
-			uuid,
+		const avatar = new File({
+			uid,
+			userId: user.id,
+			type: "avatar",
 			filename,
 			filepath,
-			directory,
-			publicPath,
+			publicpath,
+			mimetype: req.file.mimetype,
+			size: req.file.size,
 		});
 
-		const updatedUser = await db.users.update({
-			where: {
-				username: username,
-			},
-			data: {
-				avatar: avatar.json(),
-			},
-		});
+		const sizes = [
+			{ width: 400, height: 400 },
+			{ width: 250, height: 250 },
+		];
 
-		response.setUser(updatedUser);
-		response.setMessage("User avatar successfully updated");
+		const smallestSize = sizes[sizes.length - 1];
+		const smallestUid =
+			avatar.uid + `-${smallestSize.width}x${smallestSize.height}`;
 
 		queue.add(
 			new QueueTask({
 				name: "Compress user avatar",
 				type: "compress-image",
 				description: "Compress uploaded user avatar",
-				priority: 4,
 				data: {
 					image: avatar,
-					sizes: [
-						{ width: 400, height: 400 },
-						{ width: 250, height: 250 },
-					],
+					sizes: sizes,
 				},
 				userId: user.id,
 			})
 		);
+
+		waitForDbRecord(
+			db.uploads,
+			{ where: { uid: smallestUid } },
+			10, // maxAttempts
+			300 // delayMs
+		).then(async (record) => {
+			if (!record) {
+				console.error(
+					`Avatar with uid ${smallestUid} not found in DB after waiting.`
+				);
+				return;
+			}
+
+			const updatedUser = await db.users.update({
+				where: {
+					id: record.user_id,
+				},
+				data: {
+					avatarId: record.id,
+				},
+			});
+
+			if (updatedUser) {
+				response.setUser(updatedUser);
+			}
+		});
+
+		response.setMessage("Compressing and updating user avatar");
 
 		next();
 	}
