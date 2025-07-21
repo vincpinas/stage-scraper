@@ -1,4 +1,5 @@
-import Queue, { Task } from "@/services/queue/index.ts";
+import { Task } from "@services/queue/index.ts";
+import type { SendEmailTaskData } from "@types";
 
 interface EmailOptions {
 	from?: string;
@@ -50,19 +51,12 @@ export default class Email {
 	}
 
 	task() {
-		const task = new Task({
+		const task = new Task<SendEmailTaskData>({
 			name: `Send email to: ${this.to.join()}${this.getTime()}`,
 			type: "send-email",
 			description: `Sending an email to: ${this.to.join()}`,
 			data: {
-				email: {
-					from: this.from,
-					to: this.to,
-					cc: this.cc,
-					bbc: this.bcc,
-					subject: this.subject,
-					body: this.body,
-				},
+				email: this,
 			},
 			runAt: this.sendAt,
 			userId: this.userId

@@ -1,23 +1,24 @@
 # Stage Scraper Server
 
-A Node.js/TypeScript server application for scraping internship vacancies and automatically replying to them. Built with Express.js, MySQL, and Puppeteer for web scraping capabilities.
+A Node.js/TypeScript server application for scraping internship vacancies and automatically replying to them. Built with Express.js, Prisma, and Puppeteer for web scraping capabilities.
 
 ---
 
 ## 🚀 Features
 
 - **Web Scraping**: Automated scraping of internship vacancies using Puppeteer
-- **User Authentication**: Session-based authentication system
+- **Queue**: Async queue system using nodejs workers
+- **User Authentication**: Simple session-based authentication system
 - **File Upload**: Avatar and document upload functionality with validation
-- **Database Integration**: MySQL database with structured table management
-- **Email Integration**: Nodemailer for automated email responses
+- **Database Integration**: MySQL database with structured table management using Prisma
+- **Email Integration (Soon)**: Nodemailer for automated email responses
 - **RESTful API**: Clean API endpoints for all functionality
 
 ## 🧑🏾‍💻 Dev Features
 
 - **TypeScript**: Full TypeScript support with strict typing
 - **Docker Support**: Containerized MySQL database
-- **Testing**: Basic automated test suite with Supertest
+- **Testing**: Basic automated test suite
 
 ## 📋 Prerequisites
 
@@ -47,13 +48,10 @@ A Node.js/TypeScript server application for scraping internship vacancies and au
    FRONTEND_URL="http://localhost:5173"
    ASSET_BASE_URL="http://localhost:3000"
 
-   QUEUE_DELAY_SECONDS=60 // Determines the delay between auto running any pending tasks in the queue.
+   // Determines the delay between auto running any pending tasks in the queue.
+   QUEUE_DELAY_SECONDS=60
 
-   DB_HOST="localhost"
-   DB_USER="scraperuser"
-   DB_PASSWORD="scraperpassword"
-   DB_NAME="stage_scraper"
-   DB_PORT=3306 // Make sure this is the same port as in docker-compose
+   DATABASE_URL="mysql://scraperuser:scraperpassword@localhost:3306/stage_scraper"
 
    ```
 
@@ -82,19 +80,17 @@ server/
 ├── uploads/
 ├── scripts/                   # Helper scripts
 ├── src/
-│   ├── App.ts                 # Main application class (Singleton)
-│   ├── util.ts
-│   ├── db/                    # Database connection and management
+│   ├── db/
+│   ├── jobs/
+│   ├── lib/
 │   ├── middleware/
-│   │   ├── queue.ts           # Queue management middleware
-│   │   ├── response.ts        # Adds centralized response class to req object and automatically sends it at the end of the request.
-│   │   └── validation/        # Custom validation middleware (for user, fields, etc)
 │   ├── models/
 │   ├── routes/
+│   ├── scrapers/              
 │   ├── services/                    
 │   ├── tests/
 │   ├── types/
-│   └── webscraper/
+│   ├── App.ts                 # Main application class (Singleton)
 ```
 
 ## 🚀 Available npm scripts

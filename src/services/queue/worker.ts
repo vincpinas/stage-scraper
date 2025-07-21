@@ -1,10 +1,11 @@
-import type { TaskOptions } from "@/types/queue.d.ts";
+import type { TaskOptions } from "@types";
 
 import Queue, { Task } from "./index.ts";
 
 import fs from "fs";
 import path from "path";
-import { PrismaClient } from "@/db/prisma/index.js";
+import { PrismaClient } from "@db/prisma/index.js";
+import { getFileParts } from "@lib/util.ts";
 
 // Create a queue with 1 concurrent task (can be increased if desired)
 const queue = new Queue(1);
@@ -18,7 +19,7 @@ const executorFiles = (await fs.promises.readdir(executorDir)).filter((file) =>
 // Register all executors from src/tasks.
 executorFiles.forEach(async file => {
 	// The filename minus the extension automatically gets used as the task type.
-	const name = file.split(".")[0];
+	const name = getFileParts(file).nameWithoutExtension;
 	const executor = await import(path.join(executorDir, file));
 	
 	queue.registerExecutor(name, executor.default.exec, executor.default.onComplete);
@@ -38,7 +39,7 @@ process.on("message", async (taskData) => {
 
 	try {
 		// Reconstruct a Task instance from plain object
-		const task = new Task(taskData as TaskOptions);
+		const task = new Task<any>(taskData as TaskOptions<any>);
 
 		// Register the task and immediately process it using the registered executor
 		const executor = queue['taskExecutors'].get(task.type);

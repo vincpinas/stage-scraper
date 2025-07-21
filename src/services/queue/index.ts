@@ -1,4 +1,4 @@
-import type { completionExecutorType, TaskResponse, TaskResult, TaskStatus } from "@/types/queue.d.ts";
+import type { completionExecutorType, TaskResponse, TaskResult, TaskStatus } from "@types";
 
 import { ChildProcess } from "child_process";
 import Task from "./task.ts";

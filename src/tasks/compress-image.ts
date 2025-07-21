@@ -1,12 +1,12 @@
-import sharp from "sharp";
-import path from "path";
-
-import Task from "@services/queue/task.ts";
-import { TaskResult } from "@/types/queue.js";
-import File from "@/models/file.ts";
-import { PrismaClient } from "@/db/prisma/index.js";
 import fs from "fs";
-import { waitForDbRecord } from "@/db/helpers.ts";
+import path from "path";
+import sharp from "sharp";
+
+import { PrismaClient } from "@db/prisma/index.js";
+import FileModel from "@models/file.ts";
+import Task from "@services/queue/task.ts";
+
+import type { CompressImageTaskData, CompressImageTaskResult, TaskResult } from "@types";
 
 const compressionConfig = {
 	jpeg: { quality: 80 },
@@ -14,11 +14,10 @@ const compressionConfig = {
 	png: { compressionLevel: 8 },
 };
 
-async function compressImageTask(task: Task): Promise<TaskResult> {
+async function compressImageTask(task: Task<CompressImageTaskData>): Promise<TaskResult<CompressImageTaskResult>> {
 	try {
-		const data = task.data;
-		const image: File = data.image;
-		const sizes = data.sizes;
+		const image = task.data.image;
+		const sizes = task.data.sizes;
 
 		// Validate required data
 		if (!image) {
@@ -48,7 +47,7 @@ async function compressImageTask(task: Task): Promise<TaskResult> {
 		const compressedFiles = [];
 
 		for (const size of sizes) {
-			const newUid = data.image.uid + `-${size.width}x${size.height}`;
+			const newUid = image.uid + `-${size.width}x${size.height}`;
 			const newFilename = newUid + ".jpg";
 			const outputPath = path.join(image.directory, newFilename);
 			let compressedSize = 0;
@@ -78,14 +77,14 @@ async function compressImageTask(task: Task): Promise<TaskResult> {
 			task.updateProgress(task.progress + progressRate);
 
 			compressedFiles.push(
-				new File({
-					userId: data.image.userId,
-					type: data.image.type,
-					mimetype: data.image.mimetype,
+				new FileModel({
+					userId: image.userId,
+					type: image.type,
+					mimetype: image.mimetype,
 					uid: newUid,
 					filename: newFilename,
 					filepath: outputPath,
-					publicpath: data.image.publicpath.replace(image.filename, newFilename),
+					publicpath: image.publicpath.replace(image.filename, newFilename),
 					size: compressedSize,
 				})
 			);
@@ -102,8 +101,10 @@ async function compressImageTask(task: Task): Promise<TaskResult> {
 	}
 }
 
-async function onComplete(db: PrismaClient, task: Task, result: TaskResult) {
-	const image: File | undefined = task.data.image;
+async function onComplete(db: PrismaClient, task: Task<CompressImageTaskData>, result: TaskResult<CompressImageTaskResult>) {
+	if(!task.data) return;
+
+	const image = task.data.image;
 
 	if(image && image.type === "avatar") {
 		await fs.promises.unlink(image.filepath);

@@ -1,6 +1,6 @@
 import dom from "jsdom";
 
-import type { SearchResults } from "@/types/webscrape.d.ts";
+import type { SearchResults } from "@types";
 
 export default async function stagemarktScraper(dom: dom.JSDOM): Promise<SearchResults[]> {
 	const document = dom.window.document;

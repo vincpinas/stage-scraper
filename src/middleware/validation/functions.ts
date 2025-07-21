@@ -1,6 +1,6 @@
 import type { ValidationResult } from "@types";
 
-import HttpResponse from "@/models/response.ts";
+import HttpResponse from "@models/response.ts";
 
 export default class Validate {
 	// Utility methods

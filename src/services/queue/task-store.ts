@@ -1,7 +1,8 @@
-import type { TaskResponse, TaskResult, TaskStatus } from "@/types/queue.d.ts";
+import type { TaskResponse } from "@types";
 import { PrismaClient } from "@db/prisma/index.js";
 import Queue from "./index.ts";
-import File from "@/models/file.ts";
+import File from "@models/file.ts";
+import { hasProperty } from "@lib/util.ts";
 
 const enum Tables {
 	Emails = "emails",
@@ -123,8 +124,10 @@ export default class TaskStore {
 						update: insert,
 						create: insert,
 					});
-				} catch (err: any) {
-					if (err.code === "P2002") {
+				} catch (err: unknown) {
+					if (
+						hasProperty(err, "code", "string")
+					) {
 						try {
 							await this.db.uploads.update({
 								where: { uid: file.uid },

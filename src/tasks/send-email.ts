@@ -1,13 +1,13 @@
-import { PrismaClient } from "@/db/prisma/index.js";
-import Email from "@/services/email.ts";
-import { Task } from "@/services/queue/index.ts";
-import { TaskResult } from "@/types/queue.js";
 import nodemailer from "nodemailer";
 
-async function sendEmailTask(task: Task): Promise<TaskResult> {
-	const emailOptions: Email = task.data.email;
+import { PrismaClient } from "@db/prisma/index.js";
+import Email from "@services/email.ts";
+import { Task } from "@services/queue/index.ts";
 
-	// console.log(emailOptions);
+import type { SendEmailTaskData, SendEmailTaskResult, TaskResult } from "@types";
+
+async function sendEmailTask(task: Task<SendEmailTaskData>): Promise<TaskResult<SendEmailTaskResult>> {
+	const emailOptions: Email = task.data.email;
 
 	try {
 		const transporter = nodemailer.createTransport({
@@ -43,7 +43,7 @@ async function sendEmailTask(task: Task): Promise<TaskResult> {
 	};
 }
 
-async function onComplete(db: PrismaClient, task: Task, result: TaskResult) {}
+async function onComplete(db: PrismaClient, task: Task<SendEmailTaskData>, result: TaskResult<SendEmailTaskResult>) {}
 
 export default {
 	exec: sendEmailTask,

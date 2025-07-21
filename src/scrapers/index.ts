@@ -1,9 +1,10 @@
-import type { SearchResults } from "@/types/webscrape.d.ts";
 import dom from "jsdom";
 
 // Scrapers
 import stagemarktScraper from "./stagemarkt.ts";
 import stagemaxScraper from "./stagemax.ts";
+
+import type { SearchResults } from "@types";
 
 // Registry of scrapers by domain
 export const scrapers: Record<

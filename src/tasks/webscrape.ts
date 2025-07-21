@@ -1,14 +1,14 @@
 import dom from "jsdom";
 
+import { PrismaClient } from "@db/prisma/index.js";
+import Webscraper from "@services/webscraper.ts";
 import Task from "@services/queue/task.ts";
-import Webscraper from "@/services/webscraper.ts";
 import { getScraperForUrl } from "@scrapers/index.ts";
 import { defuddleDOM } from "@lib/util.ts";
-import { completionExecutorType, TaskResult } from "@/types/queue.js";
-import { Prisma } from "@prisma/client";
-import { PrismaClient } from "@/db/prisma/index.js";
 
-async function webscrapeTask(task: Task): Promise<TaskResult> {
+import type { WebscrapeTaskData, WebscrapeTaskResult, TaskResult } from "@types";
+
+async function webscrapeTask(task: Task<WebscrapeTaskData>): Promise<TaskResult<WebscrapeTaskResult>> {
 	const url = task.data.url;
 	const scraper = new Webscraper({});
 
@@ -50,7 +50,7 @@ async function webscrapeTask(task: Task): Promise<TaskResult> {
 	};
 }
 
-async function onComplete(db: PrismaClient, task: Task, result: TaskResult) {}
+async function onComplete(db: PrismaClient, task: Task<WebscrapeTaskData>, result: TaskResult<WebscrapeTaskResult>) {}
 
 export default {
 	exec: webscrapeTask,

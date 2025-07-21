@@ -1,74 +1,86 @@
-import type { TestConfig } from "@/types/tests.d.ts";
-
-import StageScraper from "@/App.ts";
+import type { TestConfig } from "@types";
+import StageScraper from "@app";
 import { inArray } from "@lib/util.ts";
 import { buildTestConfig } from "./helpers.ts";
-
 import config from "../../testconfig.json" with { type: "json" };
 
-
+/**
+ * Runs a series of tests based on a provided configuration.
+ * It initializes the application, sorts tests by priority, and executes them sequentially.
+ *
+ * @param testConfig The configuration object for the tests.
+ */
 const runTests = async (testConfig: TestConfig) => {
-	const prioritizedTests = testConfig.prioritized;
-	const disabledTests = testConfig.excluded;
-	const testFilePaths = testConfig.testFilePaths;
+	const {
+		prioritized: prioritizedTests,
+		excluded: disabledTests,
+		testFilePaths,
+	} = testConfig;
 
+	console.log("🚀 Starting test runner...");
 	const app = StageScraper.getInstance().start();
-
 	await app.ready();
 
-	// Sort tests to prioritize tests in prioritizedTests array
-	const sortedTests = testFilePaths.sort((a, b) => {
-		const aIndex = prioritizedTests.indexOf(a);
-		const bIndex = prioritizedTests.indexOf(b);
+	// Sort tests to execute prioritized tests first.
+	const sortedTests = [...testFilePaths].sort((a, b) => {
+		const aIsPrioritized = prioritizedTests.includes(a);
+		const bIsPrioritized = prioritizedTests.includes(b);
 
-		// If both tests are in prioritizedTests, sort by their order in the array
-		if (aIndex !== -1 && bIndex !== -1) {
-			return aIndex - bIndex;
+		if (aIsPrioritized && !bIsPrioritized) return -1;
+		if (!aIsPrioritized && bIsPrioritized) return 1;
+
+		// If both are prioritized, sort by their index in the prioritized list.
+		if (aIsPrioritized && bIsPrioritized) {
+			return prioritizedTests.indexOf(a) - prioritizedTests.indexOf(b);
 		}
 
-		// If only a is prioritized, a comes first
-		if (aIndex !== -1) return -1;
-
-		// If only b is prioritized, b comes first
-		if (bIndex !== -1) return 1;
-
-		// If neither is prioritized, maintain original order
+		// Otherwise, maintain the original order.
 		return 0;
 	});
 
-	console.log(`\n`);
+	console.log(`Found ${sortedTests.length} tests to run.`);
 
-	// Run the tests, test return value should be a promise so it can await and runs in the proper order.
+	// Run tests sequentially.
 	for (const path of sortedTests) {
-		const isPrioritized = inArray(prioritizedTests, path);
-		const isDisabled = inArray(disabledTests, path);
-
-		if (isDisabled) {
+		if (inArray(disabledTests, path)) {
 			console.log(`⏭️  Skipping disabled test: ${path}`);
 			continue;
 		}
 
+		const isPrioritized = inArray(prioritizedTests, path);
 		const status = isPrioritized ? "🔥 PRIORITIZED" : "⚡";
-		console.log(`\n${"═".repeat(60)}`);
+		const separator = "═".repeat(60);
+
+		console.log(`\n${separator}`);
 		console.log(`🚀 Running ${status} test: ${path}`);
-		console.log(`${"═".repeat(60)}\n`);
+		console.log(`${separator}\n`);
 
-		const test = await import(`../../tests/${path}`);
+		try {
+			const testModule = await import(`../../tests/${path}`);
 
-		if (!test.default) {
-			throw new Error(`❌ Test file ${path} does not export a default function`);
+			if (typeof testModule.default !== "function") {
+				throw new Error(
+					`Test file ${path} does not have a default export that is a function.`
+				);
+			}
+
+			await testModule.default(app);
+
+			console.log(`\n${separator}`);
+			console.log(`✅ Test completed: ${path}`);
+			console.log(`${separator}\n`);
+		} catch (error)
+		{
+			console.error(`❌ Test failed: ${path}`);
+			console.error(error);
+			console.log(`\n${separator}`);
+			// Optionally, re-throw or exit process if a test fails
+			// process.exit(1);
 		}
-
-		await test.default(app);
-
-		console.log(`\n${"═".repeat(60)}`);
-		console.log(`✅ Test completed: ${path}`);
-		console.log(`${"═".repeat(60)}\n`);
 	}
 
+	console.log("✅ All tests completed. Shutting down application...");
 	app.stop();
 };
 
-runTests(
-	buildTestConfig(config)
-);
+runTests(buildTestConfig(config));
