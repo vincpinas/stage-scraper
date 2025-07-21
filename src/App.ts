@@ -1,11 +1,10 @@
 // External
 import express from "express";
 import path from "path";
-import fs from "fs";
 import { fork, ChildProcess } from "child_process";
 
 // Database
-import { PrismaClient } from "@db/prisma/index.js"
+import { PrismaClient } from "@db/prisma/index.js";
 
 // External Middleware
 import cors from "cors";
@@ -21,6 +20,7 @@ import ScrapeRoutes from "@routes/scrape.ts";
 import UploadRoutes from "@routes/upload.ts";
 
 import Queue from "@/services/queue/index.ts";
+import { ensureDir } from "./lib/util.ts";
 
 process.loadEnvFile(".env");
 
@@ -28,7 +28,6 @@ class StageScraper {
 	private static instance: StageScraper;
 
 	public readonly name: string;
-
 	private isReady: boolean;
 	private app: express.Application;
 	private router: express.Router;
@@ -36,14 +35,14 @@ class StageScraper {
 	private db: PrismaClient;
 	private queue: Queue;
 	private worker: ChildProcess;
-	private queueAutoDelay: number;
-	private queueInterval?: NodeJS.Timeout;
+	private queueLoopDelay: number;
 
 	private constructor() {
 		this.isReady = false;
+
 		this.name = process.env.APP_NAME || "";
 		this.port = Number(process.env.PORT) || 3000;
-		this.queueAutoDelay = Number(process.env.QUEUE_DELAY_SECONDS) || 60;
+		this.queueLoopDelay = Number(process.env.QUEUE_DELAY_SECONDS) || 60;
 
 		this.app = express();
 		this.router = express.Router();
@@ -96,6 +95,7 @@ class StageScraper {
 		return new Promise((resolve) => {
 			const timeout = setTimeout(() => {
 				resolve(false);
+				console.log("App failed to start within lifetime, closing app...")
 				this.stop();
 			}, lifetime);
 
@@ -124,11 +124,9 @@ class StageScraper {
 	}
 
 	public async stop() {
-		if (this.queueInterval) {
-			clearInterval(this.queueInterval);
-		}
+		this.isReady = false;
 
-		await this.db.$disconnect()
+		await this.db.$disconnect();
 
 		if (this.worker && this.worker.connected) {
 			this.worker.kill();
@@ -145,14 +143,12 @@ class StageScraper {
 		this.app.use(middleware);
 	}
 
-	public addStaticDir(route: string, dir: string = "uploads"): void {
-		const directory = path.join(process.cwd(), dir, route);
+	public async addStaticDir(route: string, dir: string = "uploads"): Promise<void> {
+		const directory = path.join(process.cwd(), "uploads", route);
 
-		if (!fs.existsSync(directory)) fs.mkdirSync(directory);
+		await ensureDir(directory);
 
-		console.log(
-			`Setting up static file serving: \n   Route: -> ${route} \n   Directory: -> /${dir}${route}`
-		);
+		console.log(`   Route: ${route} -> /${dir}${route}`);
 		this.app.use(route, express.static(directory));
 	}
 
@@ -166,7 +162,6 @@ class StageScraper {
 				credentials: true,
 			})
 		);
-
 		this.addMiddleware(
 			session({
 				secret: process.env.SECRET || "secret",
@@ -178,46 +173,50 @@ class StageScraper {
 				},
 			})
 		);
-
 		this.addMiddleware(express.json());
-
 		this.addMiddleware(express.urlencoded({ extended: true }));
-
-		// Serve static files and test routes (BEFORE setupHttpResponse to avoid interference)
 		this.serveStaticFiles();
-
-		// Attaches any needed variables and methods to the request
+		// Attaches any variables and methods needed by other middleware to the request
 		this.addMiddleware(setup(this));
-
 		// Setup Routes
 		this.initRoutes();
-
 		// Catches and handles any requests that use the queue
 		this.addMiddleware(queueManager);
-
-		/* 
-			Cleans and sends the req.httpResponse variable.
-			Automatically fetches and sends latest user data if req.requiresLogin is set during setup().
-		*/
+		// Sends the httpResponse attached to the express request object if nothing has been sent before.
 		this.addMiddleware(cleanup);
-
-		// Automatically run any tasks still pending
-		if (!this.queueAutoDelay) return;
-
-		this.queueInterval = setInterval(async () => {
-			const queue = this.queue;
-			const worker = this.worker;
-
-			console.log(
-				`🧹 Running pending tasks (every ${this.queueAutoDelay} seconds)`
-			);
-
-			queue.runPendingTasks(worker);
-		}, this.queueAutoDelay * 1000);
+		// Automatically runs any tasks still pending on a loop.
+		this.initQueueLoop();
 	}
 
 	private serveStaticFiles(): void {
+		console.log(`Setting up static file serving:`);
+
 		this.addStaticDir("/avatars");
+		this.addStaticDir("/users/cv");
+	}
+
+	private async initQueueLoop() {
+		const delay = this.queueLoopDelay;
+		let readableDuration: number;
+		let suffix: string;
+	
+		if (!delay) return;
+	
+		if (delay >= 60) {
+			readableDuration = delay / 60;
+			suffix = delay === 60 ? "minute" : "minutes";
+		} else {
+			readableDuration = delay;
+			suffix = "seconds";
+		}
+	
+		while (this.isReady) {
+			console.log(
+				`🧹 Running pending tasks (every ${readableDuration} ${suffix})`
+			);
+			await this.queue.runPendingTasks(this.worker);
+			await new Promise((resolve) => setTimeout(resolve, delay * 1000));
+		}
 	}
 
 	private initRoutes(): void {
@@ -236,13 +235,15 @@ class StageScraper {
 		);
 		let worker = fork(workerPath);
 
+		// Incase worker crashes or loses connection, restart it.
 		worker.on("exit", (code, signal) => {
 			console.error(
 				`Worker exited with code ${code} and signal ${signal}. Restarting...`
 			);
+
 			setTimeout(() => {
 				this.worker = this.spawnWorker();
-			}, 1000); // Wait 1 second before restarting
+			}, 1000);
 		});
 
 		worker.on("error", (err) => {
