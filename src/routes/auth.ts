@@ -20,7 +20,7 @@ router.post(
 		const { username, password, email } = req.body;
 
 		try {
-			const hashedPassword = hashPassword(password);
+			const hashedPassword = await hashPassword(password);
 
 			if(!hashedPassword) {
 				throw new Error("Failed to hash password")
@@ -72,7 +72,7 @@ router.post(
 				},
 			});
 
-			if (!login || !matchHash(password, login.password)) {
+			if (!login || !await matchHash(password, login.password)) {
 				response.setMessage("Invalid username or password");
 				res.status(401).send(response).end();
 				return;

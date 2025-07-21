@@ -23,6 +23,29 @@ export function defuddleDOM(dom: dom.JSDOM) {
 	return dom;
 };
 
+export async function ensureDir(directory: string) {
+	try {
+		return await fs.promises.mkdir(directory, { recursive: true });
+	} catch (err) {
+		console.error(`Failed to create directory ${directory}:`, err);
+		return;
+	}
+}
+
+export async function clearDir(directory: string) {
+	try {
+		const files = await fs.promises.readdir(directory);
+		for (const file of files) {
+			const filePath = path.join(directory, file);
+			if ((await fs.promises.lstat(filePath)).isFile()) {
+				await fs.promises.unlink(filePath);
+			}
+		}
+	} catch (err) {
+		console.error("Error clearing avatar directory:", err);
+	}
+}
+
 
 // String manipulation
 // ================================
@@ -67,9 +90,9 @@ export function getExtension(filename: string): string {
 // Security
 // ================================
 
-export function hashPassword(passwordInput: string, saltRounds = 10) {
+export async function hashPassword(passwordInput: string, saltRounds = 10) {
 	try {
-		const hash = bcrypt.hashSync(passwordInput, saltRounds);
+		const hash = await bcrypt.hash(passwordInput, saltRounds);
 		return hash;
 	} catch (err) {
 		console.error(err);
@@ -77,6 +100,6 @@ export function hashPassword(passwordInput: string, saltRounds = 10) {
 	}
 }
 
-export function matchHash(input: string, hash: string) {
-	return bcrypt.compareSync(input, hash);
+export async function matchHash(input: string, hash: string) {
+	return await bcrypt.compare(input, hash);
 }
