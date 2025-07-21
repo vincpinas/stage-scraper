@@ -9,52 +9,46 @@ export default async function test(app: StageScraper) {
 	// Wait a little for the Queue to ready up
 	await new Promise((resolve) => setTimeout(resolve, 1000));
 
-	// queue.add(
-	// 	new Task({
-	// 		name: `Stagemax scrape`,
-	//         description: "Scraping recent software development posts from: stagemax.nl",
-	// 		type: "webscrape",
-	// 		priority: 1,
-	// 		data: {
-	// 			url: "https://www.stagemax.nl/stages/zoeken/software",
-	// 		},
-	// 	})
-	// );
-
+	// Add a webscraping task for a specific url, currently only scrapes post from: "stagemax" & "stagemarkt"
+	// TODO: update page crawling logic or/and add new src/scrapers & processing logic
 	queue.add(
 		new Task({
-			name: `Stagemarkt scrape`,
+			name: `Stagemax scrape`,
 			description:
-				"Scraping recent software development posts from: stagemarkt.nl",
+				"Scraping recent software development posts from: stagemax.nl",
 			type: "webscrape",
+			priority: 1,
 			data: {
-				url: "https://stagemarkt.nl/stages?opleidingsniveau=4&range=15&type=1&crebocode=25998&plaatsPostcode=1422",
+				url: "https://www.stagemax.nl/stages/zoeken/software",
 			},
 		})
 	);
 
-	// queue.add(
-	// 	new Task({
-	// 		name: `Indeed scrape`,
-	// 		description:
-	// 			"Scraping recent software development posts from: indeed.nl",
-	// 		type: "webscrape",
-	// 		data: {
-	// 			url: "https://indeed.nl/",
-	// 		},
-	// 	})
-	// );
+	// Adding a queue task for a url that doesn't have a scraper
+	queue.add(
+		new Task({
+			name: `Indeed scrape`,
+			description: "Scraping recent software development posts from: indeed.nl",
+			type: "webscrape",
+			data: {
+				url: "https://indeed.nl/",
+			},
+		})
+	);
 
+	// Creating an email model
 	const email = new Email({
-		to: ["ikbengerrit92@gmail.com"],
+		to: ["fitese9407@dariolo.com"],
 		subject: "Stage-scraper test email",
 		body: "This is a test email from the stage-scraper API.",
-		sendAt: new Date(Date.now() + 4000),
-		userId: 1
+		userId: 1,
 	});
+	// Create a task from the email model
+	const emailTask = email.task();
+	// Add the new task to the queue to send it.
+	queue.add(emailTask);
 
-	queue.add(email.task())
-
+	// Run currently all pending tasks, this only runs tasks with a runAt property that's undefined or date earlier than now
 	await queue.runPendingTasks(worker);
 
 	// Wait a little for the Queue to run

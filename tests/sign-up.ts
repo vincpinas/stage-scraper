@@ -10,7 +10,7 @@ export default async function test(app: StageScraper) {
 			password: "Password1",
 			email: "test" + "@gmail.com",
 		})
-		.then((response: { body: unknown }) => {
+		.then((response) => {
 			// console.log(response.body);
 			return response;
 		})

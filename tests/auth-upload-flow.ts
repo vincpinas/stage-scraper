@@ -1,34 +1,27 @@
 import StageScraper from "../src/App.ts";
 
 import signup from "./sign-up.ts";
-import login from "./login.ts";
 import uploadAvatar from "./upload-avatar.ts";
 
 export default async function test(app: StageScraper) {
 	try {
-		// First, signup
+		// First, signup and get the response in signupResponse.
 		console.log("Performing signup...");
 		const signupResponse = await signup(app);
 
-		// Perform login and capture session cookies
-		console.log("Performing login...");
-		const loginResponse = await login(app);
+		// You can also use login instead if you already have an account.
+		// const loginResponse = await login(app);
 
-		// Extract session cookies from login response
-		const sessionCookies = Array.isArray(loginResponse.headers["set-cookie"])
-  ? loginResponse.headers["set-cookie"]
-  : [loginResponse.headers["set-cookie"]];
+		// Extract session cookies from the signup (or login) response
+		const sessionCookies = Array.isArray(signupResponse.headers["set-cookie"])
+			? signupResponse.headers["set-cookie"]
+			: [signupResponse.headers["set-cookie"]];
 
 		if (!sessionCookies) {
-			console.error("No session cookies received from login");
+			console.error("No session cookies received from signup");
 			return;
 		}
 
-		// console.log("Session cookies:", sessionCookies);
-
-		// Wait a moment for session to be established
-		await new Promise((resolve) => setTimeout(resolve, 1000));
-		
 		// Now perform upload with session cookies
 		console.log("Performing upload with session...");
 		await uploadAvatar(app, sessionCookies);
