@@ -1,6 +1,6 @@
 export interface DBColumn {
 	field: string;
-	value: any;
+	value: unknown;
 	message?: string;
 }
 

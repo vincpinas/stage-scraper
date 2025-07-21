@@ -4,7 +4,6 @@ import "multer";
 
 import HttpResponse from "@/models/response.ts";
 import StageScraper from "@/App.ts";
-import { AttachmentValidationOptions } from "./validation";
 import type { ValidationOptions } from "./validation.d.ts";
 
 declare module "express-serve-static-core" {
@@ -24,7 +23,7 @@ declare module "express-serve-static-core" {
 		// Queue properties
 		usesQueue?: boolean;
 		runQueue?: boolean;
-		sendTaskToWorker?: (taskData: any) => void;
+		sendTaskToWorker?: (taskData: Task) => void;
 	}
 
 	interface Response {

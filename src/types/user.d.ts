@@ -3,7 +3,7 @@ export interface UserData {
 	username: string;
 	password: string;
 	email: string;
-	avatar: string | null;
+	avatarId: number | null;
 	created_at: Date | null;
 	updated_at: Date | null;
 }
