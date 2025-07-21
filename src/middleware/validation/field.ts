@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import type { ValidationResult } from "@/types/validation.d.ts";
 
 import Validate from "./functions.ts";
 
@@ -28,10 +29,7 @@ export function fieldValidator(
 				});
 			});
 
-			response.clean();
-
-			res.status(400).send(response);
-			res.end();
+			res.status(400).send(response).end();
 			return;
 		}
 	}
@@ -39,22 +37,19 @@ export function fieldValidator(
 	const validatedFields = fields.map((field) => {
 		const [key, value] = field;
 
-		const validator = Validate[key as keyof typeof Validate] as any;
+		const validator = Validate[key as keyof typeof Validate] as ((value: unknown, key: string) => ValidationResult) | undefined;
 
 		if (typeof validator !== "function") return undefined;
 
 		return validator(value, key);
 	});
 
-	const results = Validate.all(validatedFields.filter((v) => v !== undefined));
+	const results = Validate.all(validatedFields.filter((v): v is ValidationResult => v !== undefined));
 
 	if (results.length > 0) {
 		response.combine(Validate.toResponse(results));
 
-		response.clean();
-
-		res.status(400).send(response);
-		res.end();
+		res.status(400).send(response).end();
 		return;
 	}
 

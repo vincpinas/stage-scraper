@@ -6,7 +6,7 @@ import { attachmentValidator } from "./attachments.ts";
 import { userValidator } from "./user.ts";
 
 export function getValidators(options: ValidationOptions) {
-	const validationProps: any = {}
+	const validationProps: Record<string, unknown> = {}
 	const validators = [];
 
 	if(options.user) validators.push(userValidator);

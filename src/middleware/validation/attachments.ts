@@ -29,10 +29,7 @@ export function attachmentValidator(
 			`Attachment is ${sizeDisplay} while the largest allowed size is: ${maxSizeInMB}MB`
 		);
 
-		response.clean();
-
-		res.status(400).send(response);
-		res.end();
+		res.status(400).send(response).end();
 		return;
 	}
 

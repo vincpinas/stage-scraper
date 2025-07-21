@@ -43,7 +43,7 @@ export default class Validate {
 	// Validation methods
 	// ================================
 
-	static email(email: any, field: string = "email"): ValidationResult {
+	static email(email: string, field: string = "email"): ValidationResult {
 		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
 			return {
 				valid: false,
@@ -59,7 +59,7 @@ export default class Validate {
 		};
 	}
 
-	static username(username: any, field: string = "username"): ValidationResult {
+	static username(username: string, field: string = "username"): ValidationResult {
 		if (username.length < 3) {
 			return {
 				valid: false,
@@ -75,7 +75,7 @@ export default class Validate {
 		};
 	}
 
-	static password(password: any, field: string = "password"): ValidationResult {
+	static password(password: string, field: string = "password"): ValidationResult {
 		if (!password || password.length < 6) {
 			return {
 				valid: false,
