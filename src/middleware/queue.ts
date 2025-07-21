@@ -3,16 +3,14 @@ import type { QueueOptions } from "@types";
 
 import { Task } from "@/services/queue/index.ts";
 
-const useQueue = (options: QueueOptions) => {
+const useQueue = () => {
 	const middleware = (req: Request, res: Response, next: NextFunction) => {
 		const worker = req.appRef.getWorker();
 
+		req.usesQueue = true;
 		req.sendTaskToWorker = (taskData: Task) => {
 			worker.send(taskData);
 		};
-
-		req.usesQueue = true;
-		req.runQueue = options.runNow || false;
 
 		next();
 	};
@@ -25,12 +23,11 @@ const queueManager = async (
 	res: Response,
 	next: NextFunction
 ) => {
-	const usesQueue = req.usesQueue;
-
 	const queue = req.appRef.getQueue();
 	const worker = req.appRef.getWorker();
+	const db = req.appRef.getDB();
 
-	if (usesQueue && req.sendTaskToWorker) {
+	if (req.usesQueue && req.sendTaskToWorker) {
 		queue.runPendingTasks(worker);
 	}
 

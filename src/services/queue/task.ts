@@ -1,9 +1,9 @@
-import type { TaskOptions, TaskStatus } from "@/types/queue.d.ts";
+import type { TaskOptions, TaskStatus, TaskResult } from "@/types/queue.d.ts";
 import type { Error } from "@/types/error.d.ts";
 
 export default class QueueTask {
 	// Core properties
-	id: string;
+	uid: string;
 	name: string;
 	type: string;
 	description?: string;
@@ -13,12 +13,13 @@ export default class QueueTask {
 		"pending";
 	progress: number = 0;
 	startedAt?: Date;
+	failedAt?: Date;
 	completedAt?: Date;
 
 	// Execution control
-	promise: Promise<any>;
-	private resolve!: (value: any) => void;
-	private reject!: (error: any) => void;
+	promise: Promise<unknown>;
+	private resolve!: (value: unknown) => void;
+	private reject!: (error: unknown) => void;
 
 	// Configuration
 	priority: number;
@@ -31,14 +32,14 @@ export default class QueueTask {
 	// Data & context
 	data: any;
 	userId?: number;
-	metadata: Record<string, any>;
+	metadata: Record<string, unknown>;
 
 	// Error handling
 	error?: Error;
 	errorHistory: Error[] = [];
 
 	constructor(options: TaskOptions) {
-		this.id = options.id || this.generateId();
+		this.uid = options.uid || this.generateId();
 		this.name = options.name;
 		this.type = options.type;
 		this.description = options.description;
@@ -50,7 +51,7 @@ export default class QueueTask {
 		this.userId = options.userId;
 		this.metadata = options.metadata || {};
 		this.runAt = options.runAt ? new Date(options.runAt) : undefined;
-
+		
 		this.promise = new Promise((resolve, reject) => {
 			this.resolve = resolve;
 			this.reject = reject;
@@ -60,9 +61,9 @@ export default class QueueTask {
 	// Public methods
 	// ================================
 
-	async execute(executor: (task: QueueTask) => Promise<any>): Promise<any> {
+	async execute(executor: (task: QueueTask) => Promise<TaskResult>): Promise<TaskResult> {
 		if (this.status !== "pending") {
-			throw new Error(`Task ${this.id} is not in pending status`);
+			throw new Error(`Task ${this.uid} is not in pending status`);
 		}
 
 		this.status = "running";
@@ -78,16 +79,23 @@ export default class QueueTask {
 			// Execute the task with timeout
 			const result = await Promise.race([executor(this), this.createTimeout()]);
 
-			this.status = "completed";
-			this.completedAt = new Date();
-			this.progress = 100;
+			if(!result.processed) {
+				this.setFailed();
+				return result;
+			}
 
+			this.setCompleted();
 			this.resolve(result);
 
-			console.log(`(ID: ${this.id}) ${this.description} }`, "Status:", this.status);
+			console.log(`(ID: ${this.uid}) ${this.description} }`, "Status:", this.status);
 
 			return result;
 		} catch (error) {
+			if (this.shouldRetry(error as Error) && this.retry()) {
+				console.warn(`Retrying task ${this.uid} (attempt ${this.retryCount}) due to error:`, error);
+				return this.execute(executor); // Recursively retry
+			}
+
 			this.handleError(error as Error);
 			throw error;
 		}
@@ -120,7 +128,7 @@ export default class QueueTask {
 		this.progress = Math.max(0, Math.min(100, progress));
 
 		console.log(
-			`(ID: ${this.id}) ${this.description} }`,
+			`(ID: ${this.uid}) ${this.description} }`,
 			"Progress:",
 			`${this.progress}%`
 		);
@@ -128,7 +136,7 @@ export default class QueueTask {
 
 	getStatus(): TaskStatus {
 		return {
-			id: this.id,
+			uid: this.uid,
 			name: this.name,
 			type: this.type,
 			status: this.status,
@@ -147,30 +155,61 @@ export default class QueueTask {
 		return !this.runAt || this.runAt <= new Date();
 	}
 
+	addError(error: Error) {
+		this.error = error;
+		this.errorHistory.push(error);
+
+		console.error(error);
+	}
+
 	// Private methods
+	// ================================
+	
+	private setFailed() {
+		this.status = "failed";
+		this.failedAt = new Date();
+		this.progress = 0;
+	}
+	
+	private setCompleted() {
+		this.status = "completed";
+		this.completedAt = new Date();
+		this.progress = 100;
+	}
+	
+
+	private handleError(error: Error): void {
+		this.addError(error);
+		this.setFailed();
+		this.reject(error);
+	}
+
+	// Utility
 	// ================================
 
 	private generateId(): string {
 		return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 	}
-
-	private handleError(error: Error): void {
-		this.error = error;
-		this.errorHistory.push(error);
-		this.status = "failed";
-		this.completedAt = new Date();
-		this.reject(error);
-	}
-
+	
 	private createTimeout(): Promise<never> {
 		return new Promise((_, reject) => {
 			setTimeout(() => {
-				reject(new Error(`Task ${this.id} timed out after ${this.timeout}ms`));
+				reject(new Error(`Task ${this.uid} timed out after ${this.timeout}ms`));
 			}, this.timeout);
 		});
 	}
 
 	public sleep(ms: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
+	private shouldRetry(error: Error): boolean {
+		const retryableErrors = [
+			'No scraper available for domain',
+			'Invalid URL format',
+			'Network timeout'
+		];
+		
+		return retryableErrors.some(pattern => error.message.includes(pattern));
 	}
 }

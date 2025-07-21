@@ -1,15 +1,21 @@
-import type { TaskStatus } from "@/types/queue.d.ts";
+import type { completionExecutorType, TaskResponse, TaskResult, TaskStatus } from "@/types/queue.d.ts";
 
 import { ChildProcess } from "child_process";
 import Task from "./task.ts";
+import TaskStore from "./task-store.ts";
 
 export default class Queue {
 	private taskStack: Task[] = [];
 	private maxConcurrentTasks: number;
-	private taskExecutors: Map<string, (task: Task) => Promise<any>> = new Map();
+	private taskExecutors: Map<string, (task: Task) => Promise<TaskResult>> =
+		new Map();
+	private taskCompletionExecutors: Map<string, completionExecutorType> =
+		new Map();
+	private taskStore: TaskStore;
 
 	constructor(maxConcurrentTasks: number = 3) {
 		this.maxConcurrentTasks = maxConcurrentTasks;
+		this.taskStore = new TaskStore(this);
 	}
 
 	// Public methods
@@ -35,12 +41,16 @@ export default class Queue {
 			"to worker"
 		);
 
+		worker.on("message", async (data: TaskResponse) => {
+			if (!data.task) return;
+
+			await this.taskStore.saveTask(data);
+			await this.taskStore.saveResult(data);
+		});
+
 		for (const task of pendingTasks) {
 			worker.send(task);
-			this.remove(task.id);
 		}
-
-		console.log("✅ Queue finished");
 	}
 
 	async scheduleTasks(): Promise<void> {
@@ -61,23 +71,28 @@ export default class Queue {
 
 	add(task: Task): this {
 		this.taskStack.push(task);
-		console.log(`➕ Added task: ${task.name} (ID: ${task.id})`);
+		console.log(`➕ Added task: ${task.name} (ID: ${task.uid})`);
 		return this;
 	}
 
 	remove(taskId: string): boolean {
-		const index = this.taskStack.findIndex((task) => task.id === taskId);
+		const index = this.taskStack.findIndex((task) => task.uid === taskId);
+
 		if (index !== -1) {
 			const task = this.taskStack.splice(index, 1)[0];
 			console.log(`🗑️ Removed task: ${task.name} (ID: ${taskId})`);
+
+			if (this.taskStack.length === 0) console.log("✅ Queue finished");
+
 			return true;
 		}
+
 		return false;
 	}
 
 	cancel(taskId: string): boolean {
 		// Cancel pending task only
-		const pendingTask = this.taskStack.find((task) => task.id === taskId);
+		const pendingTask = this.taskStack.find((task) => task.uid === taskId);
 		if (pendingTask) {
 			pendingTask.cancel();
 			this.remove(taskId);
@@ -87,7 +102,7 @@ export default class Queue {
 	}
 
 	getTask(taskId: string): Task | undefined {
-		return this.taskStack.find((task) => task.id === taskId);
+		return this.taskStack.find((task) => task.uid === taskId);
 	}
 
 	getAllTasks(): TaskStatus[] {
@@ -95,20 +110,20 @@ export default class Queue {
 	}
 
 	getPendingTasks(): TaskStatus[] {
-		return this.taskStack.map((task) => task.getStatus());
-	}
-
-	getCompletedTasks(): TaskStatus[] {
-		// This would need to be implemented with a completed tasks store
-		// For now, return empty array
-		return [];
+		return this.taskStack
+			.filter(
+				(task) => typeof task.isReadyToRun === "function" && task.isReadyToRun()
+			)
+			.map((task) => task.getStatus());
 	}
 
 	registerExecutor(
 		taskType: string,
-		executor: (task: Task) => Promise<any>
+		executor: (task: Task) => Promise<TaskResult>,
+		completionExecutor: completionExecutorType
 	): void {
 		this.taskExecutors.set(taskType, executor);
+		this.taskCompletionExecutors.set(taskType, completionExecutor)
 		console.log(`🔧 Registered executor for task type: ${taskType}`);
 	}
 
