@@ -1,7 +1,8 @@
 import type { UserData } from "@/types/user.d.ts";
 
 import UserPermissions from "./permissions.ts";
-import Image from "../image.ts";
+import File from "../file.ts";
+import { PrismaClient } from "@/db/prisma/index.js";
 
 export default class User {
 	permissions: UserPermissions;
@@ -9,18 +10,41 @@ export default class User {
 	id: number;
 	username: string;
 	email: string;
-	avatar: Image | null;
-	created_at: string;
-	updated_at: string;
+	avatarId: number | null;
+	created_at: Date | null;
+	updated_at: Date | null;
 
 	constructor(user: UserData) {
-        this.id = user.id;
-        this.username = user.username;
-        this.email = user.email;
-		this.avatar = JSON.parse(user.avatar) ? new Image(JSON.parse(user.avatar)) : null;
-        this.created_at = user.created_at;
-        this.updated_at = user.updated_at;
+		this.id = user.id;
+		this.username = user.username;
+		this.email = user.email;
+		this.avatarId = user.avatarId;
+		this.created_at = user.created_at;
+		this.updated_at = user.updated_at;
 
 		this.permissions = new UserPermissions();
+	}
+
+	async getAvatar(db: PrismaClient) {
+		if (!this.avatarId) return;
+
+		const avatarData = await db.uploads.findFirst({
+			where: { id: this.avatarId },
+		});
+
+		if (!avatarData) return;
+
+		const avatar = new File({ ...avatarData, userId: this.id });
+
+		return avatar.getUrl();
+	}
+
+	async json() {
+		return {
+			id: this.id,
+			username: this.username,
+			email: this.email,
+			avatarUrl: await this.getAvatar(new PrismaClient()),
+		}
 	}
 }
