@@ -1,33 +1,51 @@
 import StageScraper from "../src/App.ts";
-
 import signup from "./sign-up.ts";
+import login from "./login.ts";
 import uploadAvatar from "./upload-avatar.ts";
 
+/**
+ * Runs the authentication and avatar upload flow:
+ * 1. Signs up a new user (or you can swap for login).
+ * 2. Extracts session cookies from the response.
+ * 3. Uploads an avatar using the authenticated session.
+ * 4. Waits for the queue to process the upload.
+ */
 export default async function test(app: StageScraper) {
+	await new Promise((resolve) => setTimeout(resolve, 1000));
+
 	try {
-		// First, signup and get the response in signupResponse.
-		console.log("Performing signup...");
-		const signupResponse = await signup(app);
+		console.log("Starting authentication and upload flow...");
 
-		// You can also use login instead if you already have an account.
-		// const loginResponse = await login(app);
+		// Step 1: Sign up
+		await signup(app);
 
-		// Extract session cookies from the signup (or login) response
-		const sessionCookies = Array.isArray(signupResponse.headers["set-cookie"])
-			? signupResponse.headers["set-cookie"]
-			: [signupResponse.headers["set-cookie"]];
+		// Step 2: Login and get the response.
+		const loginResponse = await login(app);
 
-		if (!sessionCookies) {
-			console.error("No session cookies received from signup");
+		// Step 2: Extract session cookies from the response headers
+		const setCookieHeader = loginResponse.headers["set-cookie"];
+		let sessionCookies: string[] | undefined;
+
+		if (Array.isArray(setCookieHeader)) {
+			sessionCookies = setCookieHeader;
+		} else if (typeof setCookieHeader === "string") {
+			sessionCookies = [setCookieHeader];
+		}
+
+		if (!sessionCookies || sessionCookies.length === 0) {
+			console.error("No session cookies received from signup. Aborting upload.");
 			return;
 		}
 
-		// Now perform upload with session cookies
-		console.log("Performing upload with session...");
+		// Step 3: Upload avatar with session cookies
+		console.log("Uploading avatar with authenticated session...");
 		await uploadAvatar(app, sessionCookies);
 
-		// Wait a little for the Queue to run
-		await new Promise((resolve) => setTimeout(resolve, 10000));
+		// Step 4: Wait for the queue to process the upload
+		console.log("Waiting for the queue to process the upload...");
+		await new Promise((resolve) => setTimeout(resolve, 6000));
+
+		console.log("Auth-upload flow completed.");
 	} catch (error) {
 		console.error("Error in auth-upload flow:", error);
 	}

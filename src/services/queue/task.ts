@@ -1,6 +1,6 @@
-import type { TaskOptions, TaskStatus, TaskResult, Error } from "@types";
+import type { TaskOptions, TaskStatus, TaskResult, Error, TaskData } from "@types";
 
-export default class QueueTask<TData = unknown> {
+export default class QueueTask<TData = TaskData> {
 	// Core properties
 	uid: string;
 	name: string;
@@ -70,7 +70,6 @@ export default class QueueTask<TData = unknown> {
 		this.progress = 0;
 
 		try {
-			// Apply delay if specified
 			if (this.delay > 0) {
 				await this.sleep(this.delay);
 			}

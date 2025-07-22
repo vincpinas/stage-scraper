@@ -47,8 +47,6 @@ class StageScraper {
 
 		// Spawn the worker process
 		this.worker = this.spawnWorker();
-
-		this.init();
 	}
 
 	// Getters
@@ -85,30 +83,12 @@ class StageScraper {
 		return this.worker;
 	}
 
-	public ready(lifetime: number = 5000): Promise<boolean> {
-		return new Promise((resolve) => {
-			const timeout = setTimeout(() => {
-				resolve(false);
-				console.log("App failed to start within lifetime, closing app...")
-				this.stop();
-			}, lifetime);
-
-			const checkReadyWithTimeout = () => {
-				if (this.isReady) {
-					clearTimeout(timeout);
-					resolve(true);
-				} else {
-					setTimeout(checkReadyWithTimeout, 100);
-				}
-			};
-			checkReadyWithTimeout();
-		});
-	}
-
 	// Methods
 	// ================================
 
-	public start(): StageScraper {
+	public async start(): Promise<this> {
+		await this.init();
+
 		this.app.listen(this.port, () => {
 			console.log(`Server is running on port ${this.port}`);
 			this.isReady = true;
@@ -141,15 +121,18 @@ class StageScraper {
 		const directory = path.join(process.cwd(), "uploads", route);
 
 		await ensureDir(directory);
-
-		console.log(`   Route: ${route} -> /${dir}${route}`);
 		this.app.use(route, express.static(directory));
+		console.log(`   Route: ${route} -> /${dir}${route}`);
 	}
 
 	// Private methods
 	// ================================
+	
+	private async init(): Promise<void> {
+		await this.queue["taskExecutors"].initialize();
+		await this.serveStaticFiles(); 
+		this.initQueueLoop(); // Automatically runs any pending tasks still in memory
 
-	private init(): void {
 		this.addMiddleware(
 			cors({
 				origin: process.env.FRONTEND_URL,
@@ -169,24 +152,17 @@ class StageScraper {
 		);
 		this.addMiddleware(express.json());
 		this.addMiddleware(express.urlencoded({ extended: true }));
-		this.serveStaticFiles();
-		// Attaches any variables and methods needed by other middleware to the request
-		this.addMiddleware(setup(this));
-		// Setup Routes
-		this.initRoutes();
-		// Catches and handles any requests that use the queue
-		this.addMiddleware(queueManager);
-		// Sends the httpResponse attached to the express request object if nothing has been sent before.
-		this.addMiddleware(cleanup);
-		// Automatically runs any tasks still pending on a loop.
-		this.initQueueLoop();
+		this.addMiddleware(setup(this)); // Attaches any variables and methods needed by other middleware to the request
+		this.initRoutes(); // Setup Routes
+		this.addMiddleware(queueManager); // Catches and handles any requests that use the queue
+		this.addMiddleware(cleanup); // Sends the httpResponse attached to the express request object if nothing has been sent before.
 	}
 
-	private serveStaticFiles(): void {
+	private async serveStaticFiles(): Promise<void> {
 		console.log(`Setting up static file serving:`);
 
-		this.addStaticDir("/avatars");
-		this.addStaticDir("/users/cv");
+		await this.addStaticDir("/avatars");
+		await this.addStaticDir("/users/cv");
 	}
 
 	private async initQueueLoop() {

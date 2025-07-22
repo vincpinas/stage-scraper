@@ -10,16 +10,31 @@ export function inArray(array: unknown[], item: unknown) {
 	return array.indexOf(item) > -1;
 }
 
-export function hasProperty(object: unknown, property: string, expectType?: string) {
+export function hasProperty(
+	object: unknown,
+	property: string,
+	expect?: { type?: string, value?: unknown }
+) {
 	if (typeof object !== "object" || object === null) {
 		return false;
 	}
 
-	if (expectType) {
-		return property in object && typeof (object as Record<string, unknown>)[property] === expectType;
+	if (!(property in object)) {
+		return false;
 	}
 
-	return property in object;
+	const value = (object as Record<string, unknown>)[property];
+
+	if (expect?.type && typeof value !== expect.type) {
+		return false;
+	}
+
+	if (arguments.length >= 3 && expect?.value) {
+		// Only check expectValue if it was explicitly provided
+		return value === expect.value;
+	}
+
+	return true;
 }
 
 // Used for webscraping, removes any uncessary elements from DOM before searching through it.

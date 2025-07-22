@@ -1,12 +1,10 @@
-import { PrismaClient } from "@/db/prisma/index.js";
-import type Email from "@/services/email.ts";
-import type File from "@/models/file.ts";
-import { Task } from "@/services/queue/index.ts";
-import type { Error } from "@types"; 
+import { PrismaClient } from "@db/prisma/index.js";
+import type Email from "@services/email.ts";
+import type File from "@models/file.ts";
+import { Task } from "@services/queue/index.ts";
+import type { Error, TaskData } from "@types"; 
 
-export type completionExecutorType = (db: PrismaClient, task: Task, result: TaskResult) => Promise<void>
-
-export interface TaskOptions<TData = unknown> {
+export interface TaskOptions<TData = TaskData> {
     uid?: string;
     name: string;
     type: string;

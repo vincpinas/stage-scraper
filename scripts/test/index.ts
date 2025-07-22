@@ -18,8 +18,7 @@ const runTests = async (testConfig: TestConfig) => {
 	} = testConfig;
 
 	console.log("🚀 Starting test runner...");
-	const app = StageScraper.getInstance().start();
-	await app.ready();
+	const app = await StageScraper.getInstance().start();
 
 	// Sort tests to execute prioritized tests first.
 	const sortedTests = [...testFilePaths].sort((a, b) => {

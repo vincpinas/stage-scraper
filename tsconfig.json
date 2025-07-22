@@ -44,6 +44,6 @@
 		"scripts/test/index.ts",
 		"scripts/build/index.ts",
 		"scripts/build/helpers.ts"
-	],
+, "src/services/queue/task-registry.ts"	],
 	"exclude": ["./node_modules", "./dist"]
 }
