@@ -1,8 +1,8 @@
 import { PrismaClient } from "@db/prisma/index.js";
+import { Task } from "@services/queue/index.ts";
 import type Email from "@services/email.ts";
 import type File from "@models/file.ts";
-import { Task } from "@services/queue/index.ts";
-import type { Error, TaskData } from "@types"; 
+import type { Error, TaskData, SearchResults } from "@types"; 
 
 export interface TaskOptions<TData = TaskData> {
     uid?: string;
@@ -35,18 +35,43 @@ export interface TaskStatus {
     runAt?: Date;
 }
 
-export interface TaskResult<T = unknown> {
-    processed: boolean;
-    
-    [key: string]: unknown;
-}
-
 export interface TaskResponse {
     task: Task | null;
     error: string | null;
     result: TaskResult;
 }
 
-export interface QueueOptions {
-    runNow?: boolean;
+
+// Union Types
+export type TaskData = WebscrapeTaskData | SendEmailTaskData | CompressImageTaskData;
+
+// Task specific data types.
+export interface WebscrapeTaskData {
+    url: string;
+}
+
+export interface SendEmailTaskData {
+    email: Email;
+}
+export interface CompressImageTaskData {
+    image: File;
+    sizes: { width: number; height: number }[];
+}
+
+
+// Task specific result types.
+export type TaskResult<T> = {
+    processed: boolean;
+} & T;
+
+export interface CompressImageTaskResult {
+    files: File[];
+}
+
+export interface SendEmailTaskResult {
+    email: Email
+}
+
+export interface WebscrapeTaskResult {
+    scrapedPosts: SearchResults[]
 }

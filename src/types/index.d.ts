@@ -6,7 +6,6 @@ export type * from "./user.d.ts";
 export type * from "./error.d.ts";
 export type * from "./http.d.ts";
 export type * from "./queue.d.ts";
-export type * from "./tasks.d.ts";
 export type * from "./webscrape.d.ts";
 
 // Import Express augmentations (these are global declarations, not exports)
