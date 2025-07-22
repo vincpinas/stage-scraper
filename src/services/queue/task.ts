@@ -1,7 +1,6 @@
-import type { TaskOptions, TaskStatus, TaskResult } from "@/types/queue.d.ts";
-import type { Error } from "@/types/error.d.ts";
+import type { TaskOptions, TaskStatus, TaskResult, Error, TaskData } from "@types";
 
-export default class QueueTask {
+export default class QueueTask<TData = TaskData> {
 	// Core properties
 	uid: string;
 	name: string;
@@ -30,7 +29,7 @@ export default class QueueTask {
 	runAt?: Date;
 
 	// Data & context
-	data: any;
+	data: TData;
 	userId?: number;
 	metadata: Record<string, unknown>;
 
@@ -38,7 +37,7 @@ export default class QueueTask {
 	error?: Error;
 	errorHistory: Error[] = [];
 
-	constructor(options: TaskOptions) {
+	constructor(options: TaskOptions<TData>) {
 		this.uid = options.uid || this.generateId();
 		this.name = options.name;
 		this.type = options.type;
@@ -47,7 +46,7 @@ export default class QueueTask {
 		this.maxRetries = options.maxRetries || 3;
 		this.delay = options.delay || 0;
 		this.timeout = options.timeout || 30000; // 30 seconds default
-		this.data = options.data;
+		this.data = options.data as TData;
 		this.userId = options.userId;
 		this.metadata = options.metadata || {};
 		this.runAt = options.runAt ? new Date(options.runAt) : undefined;
@@ -61,7 +60,7 @@ export default class QueueTask {
 	// Public methods
 	// ================================
 
-	async execute(executor: (task: QueueTask) => Promise<TaskResult>): Promise<TaskResult> {
+	async execute(executor: (task: QueueTask<TData>) => Promise<TaskResult>): Promise<TaskResult> {
 		if (this.status !== "pending") {
 			throw new Error(`Task ${this.uid} is not in pending status`);
 		}
@@ -71,7 +70,6 @@ export default class QueueTask {
 		this.progress = 0;
 
 		try {
-			// Apply delay if specified
 			if (this.delay > 0) {
 				await this.sleep(this.delay);
 			}

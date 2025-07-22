@@ -1,21 +1,22 @@
-import type { completionExecutorType, TaskResponse, TaskResult, TaskStatus } from "@/types/queue.d.ts";
-
 import { ChildProcess } from "child_process";
+
 import Task from "./task.ts";
 import TaskStore from "./task-store.ts";
+import TaskExecutor from "./task-executor.ts";
+
+import type { TaskResponse, TaskStatus } from "@types";
+import TaskExecutorRegistry from "@services/queue/task-registry.ts";
 
 export default class Queue {
 	private taskStack: Task[] = [];
 	private maxConcurrentTasks: number;
-	private taskExecutors: Map<string, (task: Task) => Promise<TaskResult>> =
-		new Map();
-	private taskCompletionExecutors: Map<string, completionExecutorType> =
-		new Map();
+	private taskExecutors: TaskExecutorRegistry;
 	private taskStore: TaskStore;
 
 	constructor(maxConcurrentTasks: number = 3) {
 		this.maxConcurrentTasks = maxConcurrentTasks;
 		this.taskStore = new TaskStore(this);
+		this.taskExecutors = TaskExecutorRegistry.getInstance();
 	}
 
 	// Public methods
@@ -41,11 +42,17 @@ export default class Queue {
 			"to worker"
 		);
 
+		// Saves the task and runs the saveResult method if the relevant taskExecutor has one.
 		worker.on("message", async (data: TaskResponse) => {
 			if (!data.task) return;
-
+			
 			await this.taskStore.saveTask(data);
-			await this.taskStore.saveResult(data);
+			
+			const executor = this.taskExecutors.getExecutor(data.task.type);
+
+			if(!executor || !executor.saveResult) return;
+
+			await executor.saveResult(data.task, data.result, this.taskStore.db);
 		});
 
 		for (const task of pendingTasks) {
@@ -117,20 +124,10 @@ export default class Queue {
 			.map((task) => task.getStatus());
 	}
 
-	registerExecutor(
-		taskType: string,
-		executor: (task: Task) => Promise<TaskResult>,
-		completionExecutor: completionExecutorType
-	): void {
-		this.taskExecutors.set(taskType, executor);
-		this.taskCompletionExecutors.set(taskType, completionExecutor)
-		console.log(`🔧 Registered executor for task type: ${taskType}`);
-	}
-
 	clear(): void {
 		this.taskStack = [];
 		console.log("🧹 Queue cleared");
 	}
 }
 
-export { Task };
+export { Task, TaskStore, TaskExecutor };

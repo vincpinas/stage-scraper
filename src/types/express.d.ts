@@ -2,8 +2,8 @@ import "express";
 import "express-session";
 import "multer";
 
-import HttpResponse from "@/models/response.ts";
-import StageScraper from "@/App.ts";
+import HttpResponse from "@models/response.ts";
+import StageScraper from "@app";
 import type { ValidationOptions } from "./validation.d.ts";
 
 declare module "express-serve-static-core" {

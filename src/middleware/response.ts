@@ -1,5 +1,5 @@
-import StageScraper from "@/App.ts";
-import HttpResponse from "@/models/response.ts";
+import StageScraper from "@app";
+import HttpResponse from "@models/response.ts";
 import { NextFunction, Request, Response } from "express";
 
 const setup = (appRef: StageScraper) => {

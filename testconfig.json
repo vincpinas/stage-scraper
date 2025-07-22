@@ -1,5 +1,5 @@
 {
-	"select": ["auth-upload-flow", "webscrape"],
+	"select": ["auth-upload-flow"],
 	"excluded": [],
 	"prioritized": [],
 	"extensions": ["ts", "js"],

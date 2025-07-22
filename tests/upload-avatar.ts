@@ -31,7 +31,7 @@ export default async function test(
 
 	return requestBuilder
 		.then((response) => {
-			console.log(response.body);
+			// console.log(response.body);
 		})
 		.catch((error) => {
 			console.error("Error making request:", error);

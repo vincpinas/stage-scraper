@@ -1,11 +1,10 @@
-import { PrismaClient } from "@/db/prisma/index.js";
-import File from "@/models/file.ts";
-import { Task } from "@/services/queue/index.ts";
-import type { Error } from "@/types/error.d.ts"; 
+import { PrismaClient } from "@db/prisma/index.js";
+import type Email from "@services/email.ts";
+import type File from "@models/file.ts";
+import { Task } from "@services/queue/index.ts";
+import type { Error, TaskData } from "@types"; 
 
-export type completionExecutorType = (db: PrismaClient, task: Task, result: TaskResult) => Promise<void>
-
-export interface TaskOptions {
+export interface TaskOptions<TData = TaskData> {
     uid?: string;
     name: string;
     type: string;
@@ -14,7 +13,7 @@ export interface TaskOptions {
     maxRetries?: number;
     delay?: number;
     timeout?: number;
-    data?: unknown;
+    data?: TData;
     userId?: number;
     metadata?: Record<string, unknown>;
     runAt?: Date;
@@ -36,11 +35,10 @@ export interface TaskStatus {
     runAt?: Date;
 }
 
-export interface TaskResult {
+export interface TaskResult<T = unknown> {
     processed: boolean;
-
-    files?: File[]
-	[key: string]: unknown
+    
+    [key: string]: unknown;
 }
 
 export interface TaskResponse {

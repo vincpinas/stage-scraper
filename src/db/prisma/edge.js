@@ -241,7 +241,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/vincentpinas/Code/Side projects/stage-scraper/server/src/db/prisma",
+      "value": "/Users/vincentpinas/Code/stage-scraper/server/src/db/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -255,7 +255,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/vincentpinas/Code/Side projects/stage-scraper/server/src/db/prisma/schema.prisma",
+    "sourceFilePath": "/Users/vincentpinas/Code/stage-scraper/server/src/db/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

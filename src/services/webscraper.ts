@@ -1,6 +1,5 @@
-import type { ExtractionRule, WebscraperOptions } from "@/types/webscrape.d.ts";
+import type { ExtractionRule, WebscraperOptions } from "@types";
 import puppeteer, { Browser, Page } from "puppeteer";
-import { Task } from "./queue/index.ts";
 
 export class Webscraper {
 	private browser: Browser | null = null;

@@ -1,5 +1,6 @@
 import express from "express";
-import useValidation from "@middleware/validation";
+
+import useValidation from "@middleware/validation/index.ts";
 import { hashPassword, matchHash } from "@lib/util.ts";
 
 const router = express.Router();

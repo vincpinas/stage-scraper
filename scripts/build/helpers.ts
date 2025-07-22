@@ -1,27 +1,34 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec } from "child_process";
+import { promisify } from "util";
 import { build as esbuild } from "esbuild";
 import { resolve } from "path";
 
-
+/**
+ * Compiles the TypeScript project using the TypeScript compiler (tsc).
+ * This function executes `tsc` with a specific build configuration.
+ */
 export async function buildWithTSC() {
-  const execAsync = promisify(exec);
-  
-  try {
-    // Use TypeScript compiler to build the project
-    // Exclude test files by not including them in the compilation
-    await execAsync('npx tsc --project tsconfig.build.json');
-    
-    console.log('✅ Build completed successfully!');
-    console.log('📁 Output directory: dist/');
-  } catch (error) {
-    console.error('❌ Build failed:', error);
-    process.exit(1);
-  }
+	const execAsync = promisify(exec);
+
+	try {
+		console.log("⏳ Building with tsc...");
+		await execAsync("npx tsc --project tsconfig.build.json");
+		console.log("✅ Build completed successfully!");
+		console.log("📁 Output directory: dist/");
+	} catch (error) {
+		console.error("❌ Build failed:", error);
+		process.exit(1);
+	}
 }
 
+/**
+ * Bundles the project using esbuild.
+ * This function configures esbuild to handle entry points, output format,
+ * external dependencies, and path aliases.
+ */
 export async function buildWithES() {
 	try {
+		console.log("⏳ Building with esbuild...");
 		await esbuild({
 			entryPoints: ["index.ts"],
 			bundle: true,
@@ -31,6 +38,7 @@ export async function buildWithES() {
 			outdir: "dist",
 			sourcemap: true,
 			minify: false,
+			// External packages that should not be bundled
 			external: [
 				"express",
 				"express-session",
@@ -42,22 +50,22 @@ export async function buildWithES() {
 				"path",
 			],
 			alias: {
-				"@": resolve("./src"),
-				"@auth": resolve("./src/auth"),
-				"@db": resolve("./src/db/index.ts"),
-				"@db/*": resolve("./src/db"),
-				"@middleware": resolve("./src/middleware"),
-				"@routes": resolve("./src/routes"),
-				"@tests": resolve("./src/tests"),
-				"@webscraper": resolve("./src/webscraper"),
-				"@types": resolve("./src/types.ts"),
-				"@httpResponse": resolve("./src/HttpResponse.ts"),
+				"@/": resolve("./src"),
+				"@/db": resolve("./src/db/index.ts"),
+				"@/lib": resolve("./src/lib"),
+				"@/middleware": resolve("./src/middleware"),
+				"@/models": resolve("./src/models"),
+				"@/routes": resolve("./src/routes"),
+				"@/scrapers": resolve("./src/scrapers"),
+				"@/services": resolve("./src/services"),
+				"@/tasks": resolve("./src/tasks"),
+				"@/types": resolve("./src/types"),
 			},
 		});
 
-		console.log("✅ Build completed successfully!");
+		console.log("✅ esbuild build completed successfully!");
 	} catch (error) {
-		console.error("❌ Build failed:", error);
+		console.error("❌ esbuild build failed:", error);
 		process.exit(1);
 	}
 }

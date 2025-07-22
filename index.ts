@@ -1,5 +1,5 @@
-import StageScraper from "@/App.ts";
+import StageScraper from "@app";
 
 const app = StageScraper.getInstance();
 
-app.start();
+await app.start();

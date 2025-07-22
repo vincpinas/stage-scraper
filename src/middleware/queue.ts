@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import type { QueueOptions } from "@types";
 
-import { Task } from "@/services/queue/index.ts";
+import { Task } from "@services/queue/index.ts";
 
 const useQueue = () => {
 	const middleware = (req: Request, res: Response, next: NextFunction) => {
@@ -25,7 +24,6 @@ const queueManager = async (
 ) => {
 	const queue = req.appRef.getQueue();
 	const worker = req.appRef.getWorker();
-	const db = req.appRef.getDB();
 
 	if (req.usesQueue && req.sendTaskToWorker) {
 		queue.runPendingTasks(worker);

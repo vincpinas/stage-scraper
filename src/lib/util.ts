@@ -10,6 +10,33 @@ export function inArray(array: unknown[], item: unknown) {
 	return array.indexOf(item) > -1;
 }
 
+export function hasProperty(
+	object: unknown,
+	property: string,
+	expect?: { type?: string, value?: unknown }
+) {
+	if (typeof object !== "object" || object === null) {
+		return false;
+	}
+
+	if (!(property in object)) {
+		return false;
+	}
+
+	const value = (object as Record<string, unknown>)[property];
+
+	if (expect?.type && typeof value !== expect.type) {
+		return false;
+	}
+
+	if (arguments.length >= 3 && expect?.value) {
+		// Only check expectValue if it was explicitly provided
+		return value === expect.value;
+	}
+
+	return true;
+}
+
 // Used for webscraping, removes any uncessary elements from DOM before searching through it.
 export function defuddleDOM(dom: dom.JSDOM) {
 	const document = dom.window.document;
@@ -50,6 +77,27 @@ export async function clearDir(directory: string) {
 // String manipulation
 // ================================
 
+export function getFileParts(filename: string): {
+	extension: string;
+	filename: string;
+	nameWithoutExtension: string;
+} {
+	const base = path.basename(filename);
+	const lastDot = base.lastIndexOf(".");
+	if (lastDot === -1 || lastDot === 0) {
+		return {
+			extension: "",
+			filename: base,
+			nameWithoutExtension: base
+		};
+	}
+	return {
+		extension: base.slice(lastDot + 1),
+		filename: base,
+		nameWithoutExtension: base.slice(0, lastDot)
+	};
+}
+
 export const changeExtensions = (filenames: string[], extensions: string[], only?: "with" | "without") => {
 	let result: string[] = [];
 
@@ -58,33 +106,26 @@ export const changeExtensions = (filenames: string[], extensions: string[], only
 		const normalizedExtension = extension.replace(/^\./, "");
 
 		const withExtension = filenames.flatMap((testPath: string) => {
-			const testSplit = testPath.split(".");
-			const hasExtension = testSplit.includes(normalizedExtension);
+			const { extension: fileExt, nameWithoutExtension } = getFileParts(testPath);
+			const hasExtension = fileExt === normalizedExtension;
 
 			if (hasExtension) {
 				// If filename already has this extension, return both with and without extension
-				return [testSplit[0], testPath];
+				return [nameWithoutExtension, testPath];
 			}
 
 			// If filename doesn't have this extension, return both original and with extension
-			return [testPath, testPath + "." + normalizedExtension];
+			return [testPath, `${testPath}.${normalizedExtension}`];
 		});
 
-		if(only && only === "with") result = [...withExtension];
-		if(only && only === "without") result = [...result];
+		if (only && only === "with") result = [...withExtension];
+		if (only && only === "without") result = [...result];
 		else result = [...result, ...withExtension];
 	});
 
 	// Remove any duplicates
 	return [...new Set(result)];
 };
-
-export function getExtension(filename: string): string {
-	const base = path.basename(filename);
-	const lastDot = base.lastIndexOf(".");
-	if (lastDot === -1 || lastDot === 0) return "";
-	return base.slice(lastDot + 1);
-}
 
 
 // Security

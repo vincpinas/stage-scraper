@@ -1,9 +1,7 @@
-import User from "@/models/user/index.ts";
+import User from "@models/user/index.ts";
 import type {
-	DBError,
 	HttpResponseOptions,
 	UserData,
-	ServerError,
 	ServerErrorOptions,
 	Error,
 } from "@types";

@@ -1,8 +1,8 @@
-import type { UserData } from "@/types/user.d.ts";
+import type { UserData } from "@types";
 
 import UserPermissions from "./permissions.ts";
 import File from "../file.ts";
-import { PrismaClient } from "@/db/prisma/index.js";
+import { PrismaClient } from "@db/prisma/index.js";
 
 export default class User {
 	permissions: UserPermissions;

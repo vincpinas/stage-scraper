@@ -3,13 +3,13 @@ import multer from "multer";
 import fs from "fs";
 
 import { randomUUID } from "crypto";
-import File from "@/models/file.ts";
+import File from "@models/file.ts";
 
-import useValidation from "@/middleware/validation/index.ts";
-import useQueue from "@/middleware/queue.ts";
-import QueueTask from "@/services/queue/task.ts";
-import { clearDir, ensureDir } from "@/lib/util.ts";
-import { waitForDbRecord } from "@/db/helpers.ts";
+import useValidation from "@middleware/validation/index.ts";
+import useQueue from "@middleware/queue.ts";
+import QueueTask from "@services/queue/task.ts";
+import { clearDir, ensureDir } from "@lib/util.ts";
+import { waitForDbRecord } from "@db/helpers.ts";
 
 // Configuration
 // ================================
@@ -43,6 +43,7 @@ router.post(
 
 		const response = req.httpResponse;
 		const db = req.appRef.getDB();
+		const worker = req.appRef.getWorker();
 		const queue = req.appRef.getQueue();
 
 		// Get current user data.
