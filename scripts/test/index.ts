@@ -2,7 +2,7 @@ import type { TestConfig } from "@types";
 import StageScraper from "@app";
 import { inArray } from "@lib/util.ts";
 import { buildTestConfig } from "./helpers.ts";
-import config from "../../testconfig.json" with { type: "json" };
+import config from "../config.json" with { type: "json" };
 
 /**
  * Runs a series of tests based on a provided configuration.
@@ -82,4 +82,4 @@ const runTests = async (testConfig: TestConfig) => {
 	app.stop();
 };
 
-runTests(buildTestConfig(config));
+runTests(buildTestConfig(config.test));

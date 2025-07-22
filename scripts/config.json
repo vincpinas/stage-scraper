@@ -1,0 +1,15 @@
+{
+	"generator": {
+
+	},
+	"build": {
+
+	},
+	"test": {
+		"select": ["auth-upload-flow"],
+		"excluded": [],
+		"prioritized": [],
+		"extensions": ["ts", "js"],
+		"testFolderPath": "/tests"
+	}
+}
