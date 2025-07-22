@@ -45,6 +45,7 @@ export interface TaskResponse {
 
 // Union Types
 export type TaskData = WebscrapeTaskData | SendEmailTaskData | CompressImageTaskData;
+export type TaskResultProperties = CompressImageTaskResult | SendEmailTaskResult | WebscrapeTaskResult; 
 
 // Task specific data types.
 export interface WebscrapeTaskData {
@@ -66,13 +67,13 @@ export type TaskResult<T> = {
 } & T;
 
 export interface CompressImageTaskResult {
-    files: File[];
+    files?: File[];
 }
 
 export interface SendEmailTaskResult {
-    email: Email
+    email?: Email
 }
 
 export interface WebscrapeTaskResult {
-    scrapedPosts: SearchResults[]
+    scrapedPosts?: SearchResults[] | null;
 }

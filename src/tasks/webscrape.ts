@@ -46,7 +46,10 @@ export default class WebscrapeTask extends TaskExecutor {
 			task.addError(
 				new Error(`Scraper error for URL: ${url} - ${scraperResult.error}`)
 			);
-			return { processed: false };
+			return {
+				processed: false,
+				scrapedPosts: null,
+			};
 		}
 
 		const result = await scraperResult.scraper(defuddledDOM);
