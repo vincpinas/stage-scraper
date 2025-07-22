@@ -45,7 +45,6 @@ export default class compressImageTask extends TaskExecutor {
 
 				return {
 					processed: false,
-					files: [],
 				};
 			}
 
@@ -54,7 +53,6 @@ export default class compressImageTask extends TaskExecutor {
 
 				return {
 					processed: false,
-					files: [],
 				};
 			}
 

@@ -13,7 +13,6 @@ import type {
 	TaskResult,
 } from "@types";
 
-
 export default class SendEmailTask extends TaskExecutor {
 	constructor(taskType?: string) {
 		if (!taskType) {
@@ -50,7 +49,10 @@ export default class SendEmailTask extends TaskExecutor {
 			console.log("Message sent:", info.messageId);
 		} catch (error) {
 			task.addError(error instanceof Error ? error : new Error(String(error)));
-			return { processed: false };
+
+			return {
+				processed: false,
+			};
 		}
 
 		return {
