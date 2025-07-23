@@ -12,15 +12,46 @@ export default class Queue {
 	private maxConcurrentTasks: number;
 	private taskExecutors: TaskExecutorRegistry;
 	private taskStore: TaskStore;
+	private loopInitialized: boolean;
 
 	constructor(maxConcurrentTasks: number = 3) {
 		this.maxConcurrentTasks = maxConcurrentTasks;
 		this.taskStore = new TaskStore(this);
 		this.taskExecutors = TaskExecutorRegistry.getInstance();
+
+		this.loopInitialized = false;
 	}
 
 	// Public methods
 	// ================================
+
+	async runAutomatically(delay: number, worker: ChildProcess) {
+		let readableDuration: number;
+		let suffix: string;
+
+		this.loopInitialized = true;
+	
+		if (delay >= 60) {
+			readableDuration = delay / 60;
+			suffix = delay === 60 ? "minute" : "minutes";
+		} else {
+			readableDuration = delay;
+			suffix = "seconds";
+		}
+	
+		while (this.loopInitialized) {
+			await this.taskStore.syncWithDB();
+
+			if(this.getPendingTasks().length === 0) return;
+
+			console.log(
+				`🧹 Running pending tasks (every ${readableDuration} ${suffix})`
+			);
+			
+			await this.runPendingTasks(worker);
+			await new Promise((resolve) => setTimeout(resolve, delay * 1000));
+		}
+	}
 
 	async runPendingTasks(worker: ChildProcess) {
 		// Send only ready tasks to the worker
@@ -74,6 +105,10 @@ export default class Queue {
 		});
 
 		console.log(`📋 Scheduled ${this.taskStack.length} tasks`);
+	}
+
+	get executorRegistry(): TaskExecutorRegistry {
+		return this.taskExecutors;
 	}
 
 	add(task: Task): this {

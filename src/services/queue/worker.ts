@@ -5,10 +5,6 @@ import type { TaskData, TaskOptions } from "@types";
 
 process.env.WORKER = "true";
 
-// Create a queue with 1 concurrent task (can be increased if desired)
-const queue = new Queue(1);
-const db = new PrismaClient();
-
 const sendProcessResponse = (
 	task: Task | null,
 	error: unknown,
@@ -21,7 +17,12 @@ const sendProcessResponse = (
 	});
 };
 
-await queue["taskExecutors"].initialize();
+// Create a queue with 1 concurrent task (can be increased if desired)
+const queue = new Queue(1);
+const db = new PrismaClient();
+
+// Initialize the task executor registry for the worker
+await queue.executorRegistry.initialize();
 
 // Listen for tasks from the parent process
 process.on("message", async (taskData) => {
@@ -29,10 +30,10 @@ process.on("message", async (taskData) => {
 
 	try {
 		// Reconstruct a Task instance from plain object
-		const task = new Task<TaskData>(taskData as TaskOptions<any>);
+		const task = new Task<TaskData>(taskData as TaskOptions<TaskData>);
 
 		// Register the task and immediately process it using the registered executor
-		const executor = queue["taskExecutors"].getExecutor(task.type);
+		const executor = queue.executorRegistry.getExecutor(task.type);
 
 		if (executor) {
 			try {

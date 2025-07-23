@@ -118,7 +118,7 @@ class StageScraper {
 	}
 
 	public async addStaticDir(route: string, dir: string = "uploads"): Promise<void> {
-		const directory = path.join(process.cwd(), "uploads", route);
+		const directory = path.join(import.meta.dirname, "uploads", route);
 
 		await ensureDir(directory);
 		this.app.use(route, express.static(directory));
@@ -129,9 +129,13 @@ class StageScraper {
 	// ================================
 	
 	private async init(): Promise<void> {
-		await this.queue["taskExecutors"].initialize();
 		await this.serveStaticFiles(); 
-		this.initQueueLoop(); // Automatically runs any pending tasks still in memory
+
+		// Initialize the task executor registry for the server
+		await this.queue.executorRegistry.initialize();
+
+		// Intiliazes a loop that automatically runs any pending tasks still in memory after the delay specified
+		this.queue.runAutomatically(this.queueLoopDelay, this.worker)
 
 		this.addMiddleware(
 			cors({
@@ -165,30 +169,6 @@ class StageScraper {
 		await this.addStaticDir("/users/cv");
 	}
 
-	private async initQueueLoop() {
-		const delay = this.queueLoopDelay;
-		let readableDuration: number;
-		let suffix: string;
-	
-		if (!delay) return;
-	
-		if (delay >= 60) {
-			readableDuration = delay / 60;
-			suffix = delay === 60 ? "minute" : "minutes";
-		} else {
-			readableDuration = delay;
-			suffix = "seconds";
-		}
-	
-		while (this.isReady) {
-			console.log(
-				`🧹 Running pending tasks (every ${readableDuration} ${suffix})`
-			);
-			await this.queue.runPendingTasks(this.worker);
-			await new Promise((resolve) => setTimeout(resolve, delay * 1000));
-		}
-	}
-
 	private initRoutes(): void {
 		this.addRoute("/auth", AuthRoutes);
 		this.addRoute("/scrape", ScrapeRoutes);
@@ -197,8 +177,7 @@ class StageScraper {
 
 	private spawnWorker() {
 		const workerPath = path.join(
-			process.cwd(),
-			"src",
+			import.meta.dirname,
 			"services",
 			"queue",
 			"worker.ts"
