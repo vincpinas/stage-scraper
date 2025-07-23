@@ -1,9 +1,11 @@
-import { PrismaClient } from "@db/prisma/index.js";
+// These imports are automatically extended by using the "yarn generate-task" command in your console:
+import { WebscrapeTaskData } from "src/tasks/webscrape.ts";
+import { SendEmailTaskData } from "src/tasks/send-email.ts";
+import { CompressImageTaskData } from "src/tasks/compress-image.ts";
 
 import { Task } from "@services/queue/index.ts";
-import type Email from "@services/email.ts";
-import type File from "@models/file.ts";
-import type { Error, TaskData, SearchResults } from "@types"; 
+import type { Error } from "@types"; 
+
 
 export interface TaskOptions<TData = TaskData> {
     uid?: string;
@@ -42,38 +44,9 @@ export interface TaskResponse {
     result: TaskResult;
 }
 
-
-// Union Types
+// This type is automatically extended by using the "yarn generate-task" command in your console:
 export type TaskData = WebscrapeTaskData | SendEmailTaskData | CompressImageTaskData;
-export type TaskResultProperties = CompressImageTaskResult | SendEmailTaskResult | WebscrapeTaskResult; 
 
-// Task specific data types.
-export interface WebscrapeTaskData {
-    url: string;
-}
-
-export interface SendEmailTaskData {
-    email: Email;
-}
-export interface CompressImageTaskData {
-    image: File;
-    sizes: { width: number; height: number }[];
-}
-
-
-// Task specific result types.
 export type TaskResult<T> = {
     processed: boolean;
 } & T;
-
-export interface CompressImageTaskResult {
-    files?: File[];
-}
-
-export interface SendEmailTaskResult {
-    email?: Email
-}
-
-export interface WebscrapeTaskResult {
-    scrapedPosts?: SearchResults[] | null;
-}

@@ -11,15 +11,15 @@
 	},
 	"scripts": {
 		"dev": "colima start && docker-compose up -d && nodemon",
-		"start": "npx ts-node index.ts",
+		"start": "node dist/index.js",
 		"stop": "docker-compose down && colima stop",
-
-		"build": "npm run clean-task-union && clear && tsx scripts/build",
-		"lint": "npm run clean-task-union && npx eslint . --ext .ts,.js --ignore-pattern 'src/db/prisma/**'",
-		"test": "npm run clean-task-union && clear && tsx scripts/test",
-
-		"generate-task": "npm run clean-task-union && npx tsx scripts/generator/task.ts",
-		"clean-task-union": "npx tsx scripts/generator/clean-task-union.ts"
+		
+		"prepare": "npx tsx scripts/generator/clean-task-union.ts && clear",
+		"build": "yarn prepare && tsx scripts/build",
+		"lint": "yarn prepare && npx eslint . --ext .ts,.js --ignore-pattern 'src/db/prisma/**'",
+		"test": "yarn prepare && tsx scripts/test",
+		
+		"generate-task": "yarn prepare && npx tsx scripts/generator/task.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.30.1",
@@ -42,7 +42,6 @@
 		"inquirer": "^12.8.2",
 		"nodemon": "^3.1.10",
 		"supertest": "^7.1.1",
-		"ts-node": "^10.9.2",
 		"tsx": "^4.20.3",
 		"typescript": "^5.8.3"
 	},
