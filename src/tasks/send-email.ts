@@ -7,19 +7,19 @@ import TaskExecutor from "@services/queue/task-executor.ts";
 import { getFileParts } from "@lib/util.ts";
 import { safeUpsert } from "@db/helpers.ts";
 
-import type {
-	SendEmailTaskData,
-	SendEmailTaskResult,
-	TaskResult,
-} from "@types";
+import type { TaskResult } from "@types";
+
+export interface SendEmailTaskData {
+	email: Email;
+}
+
+export interface SendEmailTaskResult {
+	email?: Email;
+}
 
 export default class SendEmailTask extends TaskExecutor {
-	constructor(taskType?: string) {
-		if (!taskType) {
-			taskType = getFileParts(import.meta.filename).nameWithoutExtension;
-		}
-
-		super(taskType);
+	constructor() {
+		super(getFileParts(import.meta.filename).nameWithoutExtension);
 	}
 
 	override async exec(

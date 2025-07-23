@@ -1,5 +1,5 @@
 import { Task } from "@services/queue/index.ts";
-import type { SendEmailTaskData } from "@types";
+import type { SendEmailTaskData } from "src/tasks/send-email.ts";
 
 interface EmailOptions {
 	from?: string;

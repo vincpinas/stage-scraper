@@ -11,11 +11,16 @@ import { getFileParts } from "@lib/util.ts";
 import { safeUpsert } from "@db/helpers.ts";
 import File from "@models/file.ts";
 
-import type {
-	CompressImageTaskData,
-	CompressImageTaskResult,
-	TaskResult,
-} from "@types";
+import type { TaskResult } from "@types";
+
+export interface CompressImageTaskData {
+	image: File;
+	sizes: { width: number; height: number }[];
+}
+
+export interface CompressImageTaskResult {
+	files?: File[];
+}
 
 const compressionConfig = {
 	jpeg: { quality: 80 },
@@ -24,12 +29,8 @@ const compressionConfig = {
 };
 
 export default class compressImageTask extends TaskExecutor {
-	constructor(taskType?: string) {
-		if (!taskType) {
-			taskType = getFileParts(import.meta.filename).nameWithoutExtension;
-		}
-
-		super(taskType);
+	constructor() {
+		super(getFileParts(import.meta.filename).nameWithoutExtension);
 	}
 
 	override async exec(
@@ -121,8 +122,6 @@ export default class compressImageTask extends TaskExecutor {
 
 	override async onComplete(
 		task: Task<CompressImageTaskData>,
-		result: TaskResult<CompressImageTaskResult>,
-		db: PrismaClient
 	) {
 		const image = task.data.image;
 

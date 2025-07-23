@@ -8,19 +8,19 @@ import { getScraperForUrl } from "@scrapers/index.ts";
 import { defuddleDOM, getFileParts } from "@lib/util.ts";
 import { safeUpsert } from "@db/helpers.ts";
 
-import type {
-	WebscrapeTaskData,
-	WebscrapeTaskResult,
-	TaskResult,
-} from "@types";
+import type { TaskResult, SearchResults } from "@types";
+
+export interface WebscrapeTaskData {
+	url: string;
+}
+
+export interface WebscrapeTaskResult {
+	scrapedPosts?: SearchResults[] | null;
+}
 
 export default class WebscrapeTask extends TaskExecutor {
-	constructor(taskType?: string) {
-		if (!taskType) {
-			taskType = getFileParts(import.meta.filename).nameWithoutExtension;
-		}
-
-		super(taskType);
+	constructor() {
+		super(getFileParts(import.meta.filename).nameWithoutExtension);
 	}
 
 	override async exec(
