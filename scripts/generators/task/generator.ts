@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import Generator from "../index.ts";
+import Generator, { ParamSchema } from "../index.ts";
 
 class TaskGenerator extends Generator {
 	constructor() {
@@ -11,7 +11,7 @@ class TaskGenerator extends Generator {
 		});
 	}
 
-	override defineRequireSchema() {
+	override defineRequireSchema(): ParamSchema[] {
 		return [
 			{
 				type: "input",
