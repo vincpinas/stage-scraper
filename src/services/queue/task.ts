@@ -60,7 +60,7 @@ export default class QueueTask<TData = TaskData> {
 	// Public methods
 	// ================================
 
-	async execute(executor: (task: QueueTask<TData>) => Promise<TaskResult>): Promise<TaskResult> {
+	async execute<TResult>(executor: (task: QueueTask<TData>) => Promise<TaskResult<TResult>>): Promise<TaskResult<TResult>> {
 		if (this.status !== "pending") {
 			throw new Error(`Task ${this.uid} is not in pending status`);
 		}
