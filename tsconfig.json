@@ -13,28 +13,18 @@
 		"outDir": "dist",
 		"baseUrl": ".",
 		"paths": {
+			"@types": ["src/types/index.d.ts"],
 			"@app": ["src/App.ts"],
-			"@auth": ["src/auth/index.ts"],
 			"@auth/*": ["src/auth/*"],
-			"@db": ["src/db/index.ts"],
 			"@db/*": ["src/db/*"],
-			"@middleware": ["src/middleware/index.ts"],
 			"@middleware/*": ["src/middleware/*"],
-			"@models": ["src/models/index.ts"],
 			"@models/*": ["src/models/*"],
-			"@routes": ["src/routes/index.ts"],
 			"@routes/*": ["src/routes/*"],
-			"@services": ["src/services/index.ts"],
 			"@services/*": ["src/services/*"],
-			"@tests": ["src/tests/index.ts"],
 			"@tests/*": ["src/tests/*"],
-			"@webscraper": ["src/services/webscraper.ts"],
 			"@webscraper/*": ["src/services/webscraper/*"],
-			"@scrapers": ["src/scrapers/index.ts"],
 			"@scrapers/*": ["src/scrapers/*"],
-			"@lib": ["src/lib/index.ts"],
-			"@lib/*": ["src/lib/*"],
-			"@types": ["src/types/index.d.ts"]
+			"@lib/*": ["src/lib/*"]
 		}
 	},
 	"include": [

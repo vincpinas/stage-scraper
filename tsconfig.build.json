@@ -1,13 +1,35 @@
 {
-	"extends": "./tsconfig.json",
 	"compilerOptions": {
 		"noEmit": false,
-		"allowImportingTsExtensions": true,
+		"target": "ES2022",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"outDir": "dist",
+		"baseUrl": ".",
+		"paths": {
+			"@types": ["src/types/index.d.ts"],
+			"@app": ["src/App.ts"],
+			"@auth/*": ["src/auth/*"],
+			"@db/*": ["src/db/*"],
+			"@middleware/*": ["src/middleware/*"],
+			"@models/*": ["src/models/*"],
+			"@routes/*": ["src/routes/*"],
+			"@services/*": ["src/services/*"],
+			"@tests/*": ["src/tests/*"],
+			"@webscraper/*": ["src/services/webscraper/*"],
+			"@scrapers/*": ["src/scrapers/*"],
+			"@lib/*": ["src/lib/*"]
+		}
 	},
 	"include": [
 		"./src/**/*.ts",
 		"./index.ts",
-		"./scripts/*.ts"
+		"./bootstrap.ts",
 	],
 	"exclude": [
 		"./src/tests/**/*",

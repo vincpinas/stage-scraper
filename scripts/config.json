@@ -1,13 +1,39 @@
 {
-	"generator": {
-
-	},
+	"generator": {},
 	"build": {
-
+		"aliasMap": {
+			"@app": "./src/App",
+			"@auth/": "./src/auth/",
+			"@db/": "./src/db/",
+			"@middleware/": "./src/middleware/",
+			"@models/": "./src/models/",
+			"@routes/": "./src/routes/",
+			"@services/": "./src/services/",
+			"@webscraper/": "./src/services/webscraper/",
+			"@scrapers/": "./src/scrapers/",
+			"@lib/": "./src/lib/"
+		},
+		"exclude": [
+			{
+				"dir": "dist/src/db/prisma",
+				"files": [
+					"schema.prisma",
+					"default.d.ts",
+					"edge.d.ts",
+					"wasm.d.ts",
+					"index.d.ts",
+					"client.d.ts",
+					"libquery_engine-darwin-arm64.dylib.node",
+					"index-browser.js",
+					"runtime/index-browser.d.ts",
+					"runtime/library.d.ts"
+				]
+			}
+		]
 	},
 	"test": {
 		"select": ["auth-upload-flow"],
-		"excluded": [],
+		"exclude": [],
 		"prioritized": [],
 		"extensions": ["ts", "js"],
 		"testFolderPath": "/tests"

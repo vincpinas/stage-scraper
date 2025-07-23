@@ -43,7 +43,6 @@ router.post(
 
 		const response = req.httpResponse;
 		const db = req.appRef.getDB();
-		const worker = req.appRef.getWorker();
 		const queue = req.appRef.getQueue();
 
 		// Get current user data.
