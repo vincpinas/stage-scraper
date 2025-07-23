@@ -106,13 +106,13 @@ export const buildTestConfig = (
 		buildOptions.prioritized || [],
 		extensions
 	);
-	const excluded = changeExtensions(
-		buildOptions.excluded || [],
+	const exclude = changeExtensions(
+		buildOptions.exclude || [],
 		extensions
 	);
 
 	return {
-		excluded,
+		exclude,
 		prioritized,
 		testFilePaths,
 		extensions,

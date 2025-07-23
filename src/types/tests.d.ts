@@ -1,6 +1,6 @@
 export interface ConfigBuildOptions {
 	select?: "one" | "all" | string[];
-	excluded?: string[];
+	exclude?: string[];
 	prioritized?: string[];
     extensions?: string[];
 	testFolderPath: string;
@@ -8,7 +8,7 @@ export interface ConfigBuildOptions {
 
 export interface TestConfig {
 	testFilePaths: string[];
-	excluded: string[];
+	exclude: string[];
 	prioritized: string[];
     extensions: string[];
 }
