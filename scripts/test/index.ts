@@ -13,7 +13,7 @@ import config from "../config.json" with { type: "json" };
 const runTests = async (testConfig: TestConfig) => {
 	const {
 		prioritized: prioritizedTests,
-		excluded: disabledTests,
+		exclude: disabledTests,
 		testFilePaths,
 	} = testConfig;
 

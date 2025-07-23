@@ -1,5 +1,7 @@
 {
-	"generator": {},
+	"generators": {
+		
+	},
 	"build": {
 		"aliasMap": {
 			"@app": "./src/App",

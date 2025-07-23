@@ -14,12 +14,12 @@
 		"start": "node dist/index.js",
 		"stop": "docker-compose down && colima stop",
 		
-		"prepare": "npx tsx scripts/generator/clean-task-union.ts && clear",
-		"build": "yarn prepare && tsx scripts/build",
-		"lint": "yarn prepare && npx eslint . --ext .ts,.js --ignore-pattern 'src/db/prisma/**'",
-		"test": "yarn prepare && tsx scripts/test",
+		"synctypes": "npx tsx scripts/generators/sync-types/bootstrap.ts && clear",
+		"build": "yarn synctypes && tsx scripts/build",
+		"lint": "yarn synctypes && npx eslint . --ext .ts,.js --ignore-pattern 'src/db/prisma/**'",
+		"test": "yarn synctypes && tsx scripts/test",
 		
-		"generate-task": "yarn prepare && npx tsx scripts/generator/task.ts"
+		"generate-task": "yarn synctypes && npx tsx scripts/generators/task/generator.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.30.1",

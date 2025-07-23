@@ -1,0 +1,57 @@
+import { PrismaClient } from "@db/prisma/index.js";
+import Task from "@services/queue/task.ts";
+import TaskExecutor from "@services/queue/task-executor.ts";
+import { getFileParts } from "@lib/util.ts";
+import type { TaskResult } from "@types"
+
+export interface ${className}Data {
+  // Define your task data here
+}
+
+export interface ${className}Result {
+  // Define your task result here
+}
+
+/**
+ * ${description}
+ */
+export default class ${className} extends TaskExecutor<${className}Data, ${className}Result> {
+  constructor() {
+    super(getFileParts(import.meta.filename).nameWithoutExtension);
+  }
+
+  override async exec(
+    task: Task<${className}Data>
+  ): Promise<TaskResult<${className}Result>> {
+    // Implement your task logic here
+    return { processed: true };
+  }
+  
+  async saveResult(
+        task: Task<${className}Data>,
+        result: TaskResult<${className}Result>,
+        db: PrismaClient
+  ): Promise<void> {
+    // Implement saving the result of the "${name}" task to the database
+  }
+
+
+  // NOTE: The following two functions are completely optional and can be removed if unused.
+  // ===================
+  override async onFailure(
+    task: Task<${className}Data>,
+    error: unknown,
+    result: TaskResult<${className}Result>,
+    db: PrismaClient
+  ) {
+    // Optional: implement failure logic
+  }
+
+  override async onComplete(
+    task: Task<${className}Data>,
+    result: TaskResult<${className}Result>,
+    db: PrismaClient
+  ) {
+    // Optional: implement success logic
+  }
+}
