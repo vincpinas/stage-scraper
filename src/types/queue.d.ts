@@ -1,5 +1,3 @@
-import type { EatFoodTaskData } from "@tasks/eat-food.ts";
-import type { MyClassTaskData } from "@tasks/my-class.ts";
 // These imports are automatically extended by using the "yarn generate-task" command in your console:
 import { WebscrapeTaskData } from "src/tasks/webscrape.ts";
 import { SendEmailTaskData } from "src/tasks/send-email.ts";
@@ -47,7 +45,7 @@ export interface TaskResponse {
 }
 
 // This type is automatically extended by using the "yarn generate-task" command in your console:
-export type TaskData = WebscrapeTaskData | SendEmailTaskData | CompressImageTaskData | EatFoodTaskData | MyClassTaskData;
+export type TaskData = WebscrapeTaskData | SendEmailTaskData | CompressImageTaskData;
 
 export type TaskResult<T> = {
     processed: boolean;

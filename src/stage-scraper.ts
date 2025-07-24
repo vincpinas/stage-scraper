@@ -1,22 +1,24 @@
 import path from "path";
 import { fork, ChildProcess } from "child_process";
+
 // External
 import express from "express";
 import cors from "cors";
 import session from "express-session";
+
 // Database
 import { PrismaClient } from "@db/prisma/index.js";
 import Queue from "@services/queue/index.ts";
 import { ensureDir } from "@lib/util.ts";
+
 // Custom Middleware
 import { queueManager } from "@middleware/queue.ts";
 import { setup, cleanup } from "@middleware/response.ts";
+
 // Routes
 import AuthRoutes from "@routes/auth.ts";
 import ScrapeRoutes from "@routes/scrape.ts";
 import UploadRoutes from "@routes/upload.ts";
-
-process.loadEnvFile(".env");
 
 class StageScraper {
 	private static instance: StageScraper;

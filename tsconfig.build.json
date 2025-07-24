@@ -13,7 +13,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@types": ["src/types/index.d.ts"],
-			"@app": ["src/App.ts"],
+			"@app": ["src/stage-scraper.ts"],
 			"@auth/*": ["src/auth/*"],
 			"@db/*": ["src/db/*"],
 			"@middleware/*": ["src/middleware/*"],
